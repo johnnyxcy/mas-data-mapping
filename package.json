@@ -30,7 +30,9 @@
     ]
   },
   "dependencies": {
-    "react": "^18.0.0"
+    "@reduxjs/toolkit": "^1.8.3",
+    "react": "^18.0.0",
+    "react-redux": "^8.0.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.15.1",
@@ -42,6 +44,7 @@
     "father": "^4.0.0-rc.2",
     "gh-pages": "^3.0.0",
     "lint-staged": "^10.0.7",
+    "pre-commit": "^1.2.2",
     "prettier": "^2.2.1",
     "yorkie": "^2.0.0"
   }

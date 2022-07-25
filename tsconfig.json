@@ -1,13 +1,18 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
+    "target": "ES2021",
+    "module": "CommonJS",
     "moduleResolution": "node",
-    "jsx": "react",
+    "jsx": "react-jsx",
     "esModuleInterop": true,
-    "types": ["jest"],
+    "types": [],
     "strict": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    /* paths */
+    "baseUrl": ".",
+    "paths": {
+      "@data-mapping": ["./src/data-mapping"]
+    }
   }
 }
