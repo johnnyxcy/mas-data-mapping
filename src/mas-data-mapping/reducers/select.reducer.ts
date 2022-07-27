@@ -21,9 +21,10 @@
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { createSlice } from '@reduxjs/toolkit';
+
 import type { WritableDraft } from 'immer/dist/types/types-external';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { createSlice } from '@reduxjs/toolkit';
 import type { IMappingNode } from '@data-mapping/types';
 
 export type ISelectionModeType = 'single' | 'onShift' | 'onCtrlCmd';

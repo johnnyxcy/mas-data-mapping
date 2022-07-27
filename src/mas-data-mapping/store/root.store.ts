@@ -20,13 +20,17 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import type { IMasDataMappingData } from '@data-mapping/reducers/data.reducer';
-import { dataReducer } from '@data-mapping/reducers/data.reducer';
-import type { IMasDataMappingMap } from '@data-mapping/reducers/mapping.reducer';
-import { mapReducer } from '@data-mapping/reducers/mapping.reducer';
-import type { IMasDataMappingSelection } from '@data-mapping/reducers/select.reducer';
-import { selectionReducer } from '@data-mapping/reducers/select.reducer';
 import { configureStore } from '@reduxjs/toolkit';
+
+import { selectionReducer } from '@data-mapping/reducers/select.reducer';
+
+import { mapReducer } from '@data-mapping/reducers/mapping.reducer';
+
+import { dataReducer } from '@data-mapping/reducers/data.reducer';
+
+import type { IMasDataMappingSelection } from '@data-mapping/reducers/select.reducer';
+import type { IMasDataMappingMap } from '@data-mapping/reducers/mapping.reducer';
+import type { IMasDataMappingData } from '@data-mapping/reducers/data.reducer';
 
 export function createRootStore() {
   return configureStore({

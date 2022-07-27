@@ -20,14 +20,16 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import type { IMappingNode, IMappingSlot } from '@data-mapping/types';
+import { createSelector } from '@reduxjs/toolkit';
+
 import { FREE_SLOT_ID } from '@data-mapping/types';
+
+import type { IMappingNode, IMappingSlot } from '@data-mapping/types';
 import type { RootState } from '@data-mapping/store/root.store';
 import type { IMasDataMappingSelection } from '@data-mapping/reducers/select.reducer';
 import type { IMasDataMappingMap } from '@data-mapping/reducers/mapping.reducer';
 import type { IMasDataMappingData } from '@data-mapping/reducers/data.reducer';
 import type { Selector } from '@reduxjs/toolkit';
-import { createSelector } from '@reduxjs/toolkit';
 
 export const dataSelector: Selector<RootState, IMasDataMappingData> = (state) =>
   state.data;

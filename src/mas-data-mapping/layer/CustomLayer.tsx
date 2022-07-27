@@ -21,11 +21,13 @@
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import type { IDraggingItem } from '@data-mapping/dnd';
-import { Badge, Tag } from 'antd';
 import React from 'react';
-import type { XYCoord } from 'react-dnd';
+
+import { Badge, Tag } from 'antd';
 import { useDragLayer } from 'react-dnd';
+
+import type { XYCoord } from 'react-dnd';
+import type { IDraggingItem } from '@data-mapping/dnd';
 
 interface ICollectedProps {
   item: IDraggingItem;

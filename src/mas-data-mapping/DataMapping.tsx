@@ -20,28 +20,36 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 import React from 'react';
-import { Provider, useDispatch, useSelector } from 'react-redux';
-// import { actions, createStore } from '@data-mapping/reducer';
-import CustomLayer from '@data-mapping/layer/CustomLayer';
-import { DndProvider } from 'react-dnd';
+
+import { Col, Row } from 'antd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Row, Col, Typography } from 'antd';
+import { DndProvider } from 'react-dnd';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+
+import CustomLayer from '@data-mapping/layer/CustomLayer';
 import { FreeSlot } from '@data-mapping/droppable/FreeSlot';
-// import { useDataMapping } from '@data-mapping/hooks';
 import { MapSlot } from '@data-mapping/droppable/MapSlot';
-import type {
-  IMappingNode,
-  IMappingObject,
-  IMappingSlotBase,
-  IMappingSlotExtend,
-} from '@data-mapping/types';
-import '@data-mapping/DataMapping.css';
 import { createRootStore } from '@data-mapping/store/root.store';
 import { dataActions } from '@data-mapping/reducers/data.reducer';
 import { dataSelector } from '@data-mapping/store/selector';
 import { mapActions } from '@data-mapping/reducers/mapping.reducer';
 import { selectionActions } from '@data-mapping/reducers/select.reducer';
+
+import type {
+  IMappingNode,
+  IMappingObject,
+  IMappingSlotBase,
+  IMappingSlotExtend,
+} from './types';
+
+import '@data-mapping/DataMapping.css';
+
+interface IMappingNodeProps extends IMappingNode {}
+interface IMappingSlotProps
+  extends IMappingSlotBase,
+    Partial<IMappingSlotExtend> {}
 
 const isMac = /mac/i.test(navigator.platform);
 
@@ -49,17 +57,51 @@ const isCtrlCmd = (e: KeyboardEvent) =>
   (isMac && e.metaKey) || (!isMac && e.ctrlKey);
 
 export interface IDataMappingProps {
+  /**
+   * @description A unique id to identify the mapping component
+   */
   id: string;
-  nodes: IMappingNode[];
-  slots: (IMappingSlotBase & Partial<IMappingSlotExtend>)[];
+
+  /**
+   * @description All nodes available to drag or choose
+   */
+  nodes: IMappingNodeProps[];
+
+  /**
+   * @description All slots available to drop or fill
+   */
+  slots: IMappingSlotProps[];
+
+  /**
+   * @description Pre-mapped object, key is the slot id and the value is the array of node ids
+   * @default {}
+   */
   mapping?: IMappingObject;
+
+  /**
+   * @description Description for free slot
+   * @default "Available"
+   */
+  freeSlotDescription?: React.ReactNode | (() => React.ReactNode);
+
+  /**
+   * @description callback on map object changed
+   * @default undefined
+   */
   onMappingChange?: (mapping: IMappingObject) => void;
 }
+
+/** 加入这个只是为了导出子类型, see https://github.com/umijs/dumi/issues/914 */
+// eslint-disable-next-line @typescript-eslint/no-redeclare, @typescript-eslint/no-unused-vars
+export const IMappingNodeProps = (props: IMappingNode) => {};
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare, @typescript-eslint/no-unused-vars
+export const IMappingSlotProps = (props: IMappingSlotProps) => {};
 
 const DataMappingWrap: React.FC<Omit<IDataMappingProps, 'onMappingChange'>> = (
   props,
 ) => {
-  const { id: instanceId, nodes, slots, mapping } = props;
+  const { id: instanceId, nodes, slots, mapping, freeSlotDescription } = props;
   const dispatch = useDispatch();
   React.useEffect(() => {
     dispatch(
@@ -126,6 +168,14 @@ const DataMappingWrap: React.FC<Omit<IDataMappingProps, 'onMappingChange'>> = (
     };
   }, [onClickOutside]);
 
+  let freeSlotTitleNode: React.ReactNode = 'Available';
+  if (freeSlotDescription !== undefined) {
+    freeSlotTitleNode =
+      typeof freeSlotDescription === 'function'
+        ? freeSlotDescription()
+        : freeSlotDescription;
+  }
+
   const { slots: curSlots } = useSelector(dataSelector);
   return (
     <div className="mas-data-mapping-container" ref={containerRef}>
@@ -133,12 +183,7 @@ const DataMappingWrap: React.FC<Omit<IDataMappingProps, 'onMappingChange'>> = (
         <Col span={24} style={{ padding: '0px 4px 0px 4px' }}>
           <FreeSlot
             instanceId={instanceId}
-            description={
-              <span>
-                <Typography.Text strong>可选: </Typography.Text>
-                将数据列标签拖入合适的变量分类已完成数据映射
-              </span>
-            }
+            description={freeSlotTitleNode}
             bodyStyle={{ padding: 8, minHeight: 40 }}
           />
         </Col>
@@ -184,3 +229,5 @@ export const DataMapping: React.FC<IDataMappingProps> = (props) => {
     </DndProvider>
   );
 };
+
+export default DataMapping;

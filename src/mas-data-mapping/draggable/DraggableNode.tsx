@@ -22,13 +22,13 @@
  */
 
 import React from 'react';
+
 import { Tag } from 'antd';
 import { useDrag } from 'react-dnd';
-import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
-import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
 import { useDispatch, useSelector } from 'react-redux';
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import '@data-mapping/draggable/DraggableNode.css';
+
+import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
 import {
   nodeSelector,
   nodesInSlotSelector,
@@ -36,6 +36,10 @@ import {
 } from '@data-mapping/store/selector';
 import { selectionActions } from '@data-mapping/reducers/select.reducer';
 import { mapActions } from '@data-mapping/reducers/mapping.reducer';
+
+import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
+
+import '@data-mapping/draggable/DraggableNode.css';
 
 export interface IDraggableNodeProps {
   id: string;

@@ -22,19 +22,23 @@
  */
 
 import React from 'react';
+
 import { Card, Select, Typography } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDrop } from 'react-dnd';
-import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
-import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
-import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
-import '@data-mapping/droppable/Slot.css';
+
+import { mapActions } from '@data-mapping/reducers/mapping.reducer';
 import {
   dataSelector,
   nodeIdsInSlotSelector,
   slotSelector,
 } from '@data-mapping/store/selector';
-import { mapActions } from '@data-mapping/reducers/mapping.reducer';
+import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
+import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
+
+import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
+
+import '@data-mapping/droppable/Slot.css';
 
 export interface IMapSlotProps {
   id: string;

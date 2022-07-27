@@ -22,17 +22,20 @@
  */
 
 import React from 'react';
+
 import { Card, Space } from 'antd';
-import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDrop } from 'react-dnd';
-import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
-import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
 
-import '@data-mapping/droppable/Slot.css';
+import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
+import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
 import { freeNodesSelector } from '@data-mapping/store/selector';
 import { mapActions } from '@data-mapping/reducers/mapping.reducer';
 import { FREE_SLOT_ID } from '@data-mapping/types';
+
+import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
+
+import '@data-mapping/droppable/Slot.css';
 
 export interface IFreeSlotProps {
   instanceId: string;

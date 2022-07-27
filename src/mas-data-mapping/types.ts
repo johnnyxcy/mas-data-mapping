@@ -20,27 +20,52 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-type NodeId = string;
-type SlotId = string;
-
 export const FREE_SLOT_ID = 'mas-data-mapping-free-slot';
 
 export interface IMappingNode {
-  id: NodeId;
+  /**
+   * @description A unique id to identify the node
+   */
+  id: string;
+
+  /**
+   * @description A label to represent the node
+   */
   label: string;
 }
 
 export interface IMappingSlotBase {
-  id: SlotId;
+  /**
+   * @description A unique id to identify the slot
+   */
+  id: string;
+
+  /**
+   * @description A label to represent the slot
+   */
   label: string;
 }
 
 export interface IMappingSlotExtend {
+  /**
+   * @description whether the slot allow multiple nodes in it
+   * @default true
+   */
   allowMultiple: boolean;
+
+  /**
+   * @description whether the slot is required
+   * @default false
+   */
   required: boolean;
+
+  /**
+   * @description whether the slot is visible at the beginning
+   * @default true
+   */
   visible: boolean;
 }
 
 export type IMappingSlot = IMappingSlotBase & IMappingSlotExtend;
 
-export type IMappingObject = Record<SlotId, NodeId[]>; // key: slotId, value: nodeIds;
+export type IMappingObject = Record<string, string[]>; // key: slotId, value: nodeIds;
