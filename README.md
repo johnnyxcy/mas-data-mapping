@@ -7,7 +7,7 @@ title: 'MaSDataMapping'
 
 <div align="center">A React component for performing "map" actions</div>
 
-_Visit the [github page](johnnyxcy.github.io/mas-data-mapping)_ 🤓
+_Visit the [github page](https://johnnyxcy.github.io/mas-data-mapping)_ 🤓
 
 ## ⭐ Feature
 
