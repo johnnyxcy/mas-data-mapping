@@ -20,6 +20,27 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+type NodeId = string;
+type SlotId = string;
 
-export * as types from '@data-mapping/types';
-export { DataMapping as default } from '@data-mapping/DataMapping';
+export const FREE_SLOT_ID = 'mas-data-mapping-free-slot';
+
+export interface IMappingNode {
+  id: NodeId;
+  label: string;
+}
+
+export interface IMappingSlotBase {
+  id: SlotId;
+  label: string;
+}
+
+export interface IMappingSlotExtend {
+  allowMultiple: boolean;
+  required: boolean;
+  visible: boolean;
+}
+
+export type IMappingSlot = IMappingSlotBase & IMappingSlotExtend;
+
+export type IMappingObject = Record<SlotId, NodeId[]>; // key: slotId, value: nodeIds;

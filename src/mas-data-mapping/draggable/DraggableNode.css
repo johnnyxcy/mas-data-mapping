@@ -1,0 +1,10 @@
+@import '~antd/dist/antd.variable.css';
+
+.mas-data-mapping-tag-node {
+  min-width: 20px;
+}
+
+.mas-data-mapping-tag-node.mas-data-mapping-tag-node-selected {
+  color: #fff;
+  background-color: var(--ant-primary-color);
+}

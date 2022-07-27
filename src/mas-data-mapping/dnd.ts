@@ -20,6 +20,28 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import type { IMappingNode } from '@data-mapping/types';
 
-export * as types from '@data-mapping/types';
-export { DataMapping as default } from '@data-mapping/DataMapping';
+export enum DragItemTypes {
+  TagNode = 'mas-data-mapping-dnd-tag-node',
+}
+
+export function uniqueDragItemType(
+  itemType: DragItemTypes,
+  instanceId: string,
+) {
+  return `${instanceId}@${itemType}`;
+}
+
+export interface IDraggingNode extends IMappingNode {
+  fromSlotId: string;
+}
+
+export interface IDraggingItem {
+  sourceNode: IDraggingNode;
+  draggingNodes: IDraggingNode[];
+}
+
+export interface IDropTarget {
+  targetSlotId: string;
+}
