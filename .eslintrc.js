@@ -6,6 +6,7 @@ module.exports = {
   extends: [
     'plugin:react/recommended',
     'airbnb',
+    'plugin:import/typescript',
     require.resolve('@umijs/fabric/dist/eslint'),
   ],
   parser: '@typescript-eslint/parser',
@@ -15,6 +16,8 @@ module.exports = {
     },
     ecmaVersion: 12,
     sourceType: 'module',
+    tsconfigRootDir: __dirname,
+    project: './tsconfig.eslint.json',
   },
   plugins: ['react', '@typescript-eslint', 'import', 'react-redux'],
   rules: {
@@ -37,10 +40,7 @@ module.exports = {
       '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
     'import/resolver': {
-      typescript: {
-        alwaysTryTypes: true,
-        project: './tsconfig.json',
-      },
+      typescript: {},
     },
   },
 };
