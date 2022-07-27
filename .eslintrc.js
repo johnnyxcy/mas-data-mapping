@@ -27,6 +27,36 @@ module.exports = {
      */
     'no-use-before-define': 'off',
     'import/no-unresolved': 'error',
+    'import/order': [
+      'error',
+      {
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'sibling',
+          'parent',
+          'index',
+          'type',
+          'object',
+        ],
+        'newlines-between': 'always-and-inside-groups',
+        pathGroups: [
+          {
+            pattern: '@data-mapping/**/*.css',
+            group: 'object',
+            position: 'after',
+          },
+          {
+            pattern: 'react',
+            group: 'builtin',
+            position: 'before',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['react'],
+        warnOnUnassignedImports: true,
+      },
+    ],
     'react/function-component-definition': [
       2,
       { namedComponents: 'arrow-function' },

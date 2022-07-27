@@ -1,7 +1,9 @@
 {
   "private": true,
   "name": "mas-data-mapping",
+  "description": "React Component for mapping tag to slot",
   "version": "1.0.0",
+  "license": "MIT",
   "scripts": {
     "start": "dumi dev",
     "docs:build": "dumi build",
@@ -20,6 +22,7 @@
     "type": "git",
     "url": "https://github.com/Johnnyxcy/mas-data-mapping"
   },
+  "homepage": "https://johnnyxcy.github.io/mas-data-mapping",
   "author": {
     "name": "Chongyi Xu",
     "email": "johnny.xcy1997@outlook.com"
@@ -75,6 +78,6 @@
     "yorkie": "^2.0.0"
   },
   "engines": {
-    "node": "^16.16.0"
+    "node": ">=16.16.0"
   }
 }
