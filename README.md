@@ -2,7 +2,7 @@
 title: 'MaSDataMapping'
 ---
 
-<div align="center"><img src="/assets/icon.png" alt="mas-icon" height="100px" width="100px" /></div>
+<div align="center"><img src="https://raw.githubusercontent.com/Johnnyxcy/mas-data-mapping/main/public/assets/icon.png" alt="mas-icon" height="100px" width="100px" /></div>
 <div align="center"><h1>MaS Data Mapping</h1></div>
 
 <div align="center">A React component for performing "map" actions</div>
