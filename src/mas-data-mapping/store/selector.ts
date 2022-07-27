@@ -42,7 +42,7 @@ export const selectionSelector: Selector<
 export const freeNodesSelector: Selector<RootState, IMappingNode[]> =
   createSelector([dataSelector, mappingSelector], (data, mapping) => {
     let freeNodes = [...data.nodes];
-    for (const mappedNodeIds of Object.entries(mapping).values()) {
+    for (const [_, mappedNodeIds] of Object.entries(mapping.map)) {
       freeNodes = freeNodes.filter(
         (node) => mappedNodeIds.indexOf(node.id) === -1,
       );

@@ -16,6 +16,8 @@ export default defineConfig({
     'https://user-images.githubusercontent.com/9554297/83762004-a0761b00-a6a9-11ea-83b4-9c8ff721d4b8.png',
   logo: 'https://user-images.githubusercontent.com/9554297/83762004-a0761b00-a6a9-11ea-83b4-9c8ff721d4b8.png',
   outputPath: 'docs-dist',
+  base: '/mas-data-mapping',
+  publicPath: '/mas-data-mapping/',
   // more config: https://d.umijs.org/config
   alias: {
     '@data-mapping': path.resolve(__dirname, 'src/mas-data-mapping'),
