@@ -5,6 +5,11 @@
 mas-data-mapping is a data mapping component
 
 ```tsx
+/**
+ * title: 基础使用
+ * desc: 使用 data-mapping 组件
+ */
+
 import React from 'react';
 import DataMapping from 'mas-data-mapping';
 
