@@ -16,6 +16,14 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Johnnyxcy/mas-data-mapping"
+  },
+  "author": {
+    "name": "Chongyi Xu",
+    "email": "johnny.xcy1997@outlook.com"
+  },
   "module": "dist/esm/index.js",
   "typings": "dist/esm/index.d.ts",
   "gitHooks": {
