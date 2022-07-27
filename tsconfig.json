@@ -12,7 +12,7 @@
     /* paths */
     "baseUrl": ".",
     "paths": {
-      "@data-mapping": ["./src/data-mapping"]
+      "@data-mapping/*": ["src/mas-data-mapping/*"]
     }
   }
 }

@@ -19,33 +19,49 @@
   "module": "dist/esm/index.js",
   "typings": "dist/esm/index.d.ts",
   "gitHooks": {
-    "pre-commit": "lint-staged"
+    "pre-commit": "lint-staged",
+    "commit-msg": "./node_modules/.bin/fabric verify-commit"
   },
   "lint-staged": {
     "*.{js,jsx,less,md,json}": [
       "prettier --write"
     ],
     "*.ts?(x)": [
+      "eslint",
       "prettier --parser=typescript --write"
     ]
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.3",
+    "antd": "^4.21.7",
     "react": "^18.0.0",
-    "react-redux": "^8.0.2"
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-redux": "^7.2.8"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.15.1",
     "@testing-library/react": "^13.0.0",
     "@types/jest": "^27.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
     "@umijs/fabric": "^2.8.1",
     "@umijs/test": "^3.0.5",
     "dumi": "^1.1.0",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-import-resolver-typescript": "^3.3.0",
+    "eslint-import-resolver-webpack": "^0.13.2",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsx-a11y": "^6.6.1",
+    "eslint-plugin-react": "^7.30.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-redux": "^4.0.0",
     "father": "^4.0.0-rc.2",
     "gh-pages": "^3.0.0",
     "lint-staged": "^10.0.7",
-    "pre-commit": "^1.2.2",
     "prettier": "^2.2.1",
+    "umi-plugin-gh-pages": "^1.0.1",
     "yorkie": "^2.0.0"
   }
 }
