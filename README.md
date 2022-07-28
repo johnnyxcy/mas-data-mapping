@@ -5,9 +5,9 @@ title: 'MaSDataMapping'
 <div align="center"><img src="https://raw.githubusercontent.com/Johnnyxcy/mas-data-mapping/main/public/assets/icon.png" alt="mas-icon" height="100px" width="100px" /></div>
 <div align="center"><h1>MaS Data Mapping</h1></div>
 
-<div align="center">A React component for performing "map" actions</div>
+<div align="center"><h4><u>A React component for performing "map" actions</u></h4></div>
 
-_Visit the [github page](https://johnnyxcy.github.io/mas-data-mapping)_ 🤓
+**_Visit this [github page](https://johnnyxcy.github.io/mas-data-mapping)_** 🤓
 
 ## ⭐ Feature
 
@@ -36,7 +36,7 @@ $ npm install
 
 import React from 'react';
 import DataMapping from 'mas-data-mapping';
-import { Alert, Divider } from 'antd';
+import { Alert, Divider, Space } from 'antd';
 
 const demoData = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 const nodes = demoData.map((colName) => ({ id: colName, label: colName }));
@@ -77,11 +77,32 @@ const slots = [
   },
 ];
 
+type MappingType = Record<string, string[]>;
+const initialMapping: MappingType = {};
+initialMapping['SingleOptional'] = ['E'];
+
 export default () => {
-  const [mappingHistoryList, setMappingHistoryList] = React.useState([]);
+  const [mappingHistoryList, setMappingHistoryList] = React.useState<
+    MappingType[]
+  >([]);
 
   const onMappingChange = React.useCallback(
-    (mapping) => setMappingHistoryList(mappingHistoryList.concat(mapping)),
+    (mapping: MappingType) =>
+      setMappingHistoryList(mappingHistoryList.concat(mapping)),
+    [mappingHistoryList],
+  );
+
+  const mappingHistoryAlerts = React.useMemo(
+    () =>
+      mappingHistoryList.map((mappingHistory, index) => (
+        <Alert
+          key={`mapping-history-${index}`}
+          message={`Mapping Updated: ${JSON.stringify(mappingHistory)}`}
+          type="info"
+          showIcon
+          closable
+        />
+      )),
     [mappingHistoryList],
   );
 
@@ -90,21 +111,15 @@ export default () => {
       <DataMapping
         nodes={nodes}
         slots={slots}
+        initialMapping={initialMapping}
         onMappingChange={onMappingChange}
       />
       <Divider orientation="left" plain>
         Action History
       </Divider>
-      <div>
-        {mappingHistoryList.map((mappingHistory, index) => (
-          <Alert
-            key={`mapping-history-${index}`}
-            message={`Mapping Updated: ${JSON.stringify(mappingHistory)}`}
-            type="info"
-            showIcon
-          />
-        ))}
-      </div>
+      <Space direction="vertical" style={{ width: '-webkit-fill-available' }}>
+        {mappingHistoryAlerts}
+      </Space>
     </>
   );
 };

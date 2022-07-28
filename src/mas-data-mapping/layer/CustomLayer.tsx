@@ -27,7 +27,8 @@ import { Badge, Tag } from 'antd';
 import { useDragLayer } from 'react-dnd';
 
 import type { XYCoord } from 'react-dnd';
-import type { IDraggingItem } from '@data-mapping/dnd';
+import type { IDraggingItem } from '@data-mapping/_internal/dnd';
+import type { IMappingNodeProps } from '@data-mapping/_types';
 
 interface ICollectedProps {
   item: IDraggingItem;
@@ -35,7 +36,11 @@ interface ICollectedProps {
   currentOffset: XYCoord | null;
 }
 
-const CustomLayer: React.FC = () => {
+interface ICustomDnDLayerProps {
+  selectedNodes: IMappingNodeProps[];
+}
+
+const CustomLayer: React.FC<ICustomDnDLayerProps> = ({ selectedNodes }) => {
   const { item, isDragging, currentOffset } = useDragLayer<
     ICollectedProps,
     IDraggingItem
@@ -44,14 +49,13 @@ const CustomLayer: React.FC = () => {
     currentOffset: monitor.getSourceClientOffset(),
     isDragging: monitor.isDragging(),
   }));
+  const nSelected = React.useMemo(() => selectedNodes.length, [selectedNodes]);
 
   if (!isDragging || !currentOffset) {
     return null;
   }
 
-  const nSelected = item.draggingNodes.length;
-  const label =
-    nSelected <= 1 ? item.sourceNode.label : `选中了 ${nSelected} 个`;
+  const label = nSelected <= 1 ? item.label : `选中了 ${nSelected} 个`;
 
   const transform = `translate(${currentOffset.x}px, ${currentOffset.y}px)`;
 

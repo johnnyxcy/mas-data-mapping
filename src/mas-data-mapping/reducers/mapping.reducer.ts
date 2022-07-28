@@ -23,21 +23,25 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 import type { WritableDraft } from 'immer/dist/types/types-external';
-import type { IMappingObject, IMappingSlot } from '@data-mapping/types';
+import type { IMappingObject, IMappingSlotData } from '@data-mapping/_types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 export interface IMasDataMappingMap {
-  map: IMappingObject;
+  mappingObject: IMappingObject;
 }
 
 export interface ISetToSlotPayload {
   nodeIdOrIds: string | string[];
-  slot: IMappingSlot;
+  slot: IMappingSlotData;
 }
 
 export interface IRemoveNodeFromSlotPayload {
   nodeId: string;
-  slotId: string;
+  slotId: string; // if slotId is not given, it will be popped from any slot
+}
+
+export interface IRemoveFromAnySlotPayload {
+  nodeIdOrIds: string | string[];
 }
 
 export interface IClearNodesInSlotPayload {
@@ -45,10 +49,26 @@ export interface IClearNodesInSlotPayload {
 }
 
 const initialState: IMasDataMappingMap = {
-  map: {},
+  mappingObject: {},
 };
 
-export const { actions: mapActions, reducer: mapReducer } = createSlice({
+const popNodeFromAnySlot = (
+  state: WritableDraft<IMasDataMappingMap>,
+  nodeId: string,
+) => {
+  for (const [slotId, nodeIds] of Object.entries(state.mappingObject)) {
+    const foundIndex = nodeIds.indexOf(nodeId);
+    if (foundIndex !== -1) {
+      state.mappingObject[slotId].splice(foundIndex, 1);
+    }
+  }
+};
+
+export const {
+  actions: mapActions,
+  reducer: mapReducer,
+  name: mapActionPrefix,
+} = createSlice({
   name: 'mas-data-mapping-map',
   initialState,
   reducers: {
@@ -62,8 +82,8 @@ export const { actions: mapActions, reducer: mapReducer } = createSlice({
       state: WritableDraft<IMasDataMappingMap>,
       action: PayloadAction<IMasDataMappingMap>,
     ) => {
-      const { map: mapping } = action.payload;
-      state.map = mapping;
+      const { mappingObject: mapping } = action.payload;
+      state.mappingObject = mapping;
     },
     /**
      * Set node or nodes into a given slot
@@ -76,16 +96,6 @@ export const { actions: mapActions, reducer: mapReducer } = createSlice({
       action: PayloadAction<ISetToSlotPayload>,
     ) => {
       const { nodeIdOrIds, slot } = action.payload;
-
-      const popNodeFromAnySlot = (nodeId: string) => {
-        for (const [slotId, nodeIds] of Object.entries(state.map)) {
-          const foundIndex = nodeIds.indexOf(nodeId);
-          if (foundIndex !== -1) {
-            state.map[slotId].splice(foundIndex, 1);
-          }
-        }
-      };
-
       const appendingNodeIds =
         typeof nodeIdOrIds === 'string' ? [nodeIdOrIds] : [...nodeIdOrIds];
 
@@ -95,11 +105,11 @@ export const { actions: mapActions, reducer: mapReducer } = createSlice({
       }
 
       for (const nodeId of appendingNodeIds) {
-        popNodeFromAnySlot(nodeId);
+        popNodeFromAnySlot(state, nodeId);
       }
 
-      state.map[slot.id] = slot.allowMultiple
-        ? (state.map[slot.id] ?? []).concat(appendingNodeIds) // if allowMultiple, concat
+      state.mappingObject[slot.id] = slot.allowMultiple
+        ? (state.mappingObject[slot.id] ?? []).concat(appendingNodeIds) // if allowMultiple, concat
         : appendingNodeIds; // else replace
     },
 
@@ -114,12 +124,27 @@ export const { actions: mapActions, reducer: mapReducer } = createSlice({
       action: PayloadAction<IRemoveNodeFromSlotPayload>,
     ) => {
       const { nodeId, slotId } = action.payload;
-      if (state.map[slotId] !== undefined) {
-        state.map[slotId] = state.map[slotId].filter(
+      if (state.mappingObject[slotId] !== undefined) {
+        state.mappingObject[slotId] = state.mappingObject[slotId].filter(
           (nodeIdInSlot) => nodeIdInSlot !== nodeId,
         );
       }
-      // else do nothing because there is nothing in slot yet
+    },
+
+    /**
+     * Remove node from any slot
+     * @param state current state
+     * @param action nodeId
+     */
+    removeFromAnySlot: (
+      state: WritableDraft<IMasDataMappingMap>,
+      action: PayloadAction<IRemoveFromAnySlotPayload>,
+    ) => {
+      const { nodeIdOrIds } = action.payload;
+      const removingNodeIds =
+        typeof nodeIdOrIds === 'string' ? [nodeIdOrIds] : [...nodeIdOrIds];
+
+      removingNodeIds.forEach((nodeId) => popNodeFromAnySlot(state, nodeId));
     },
 
     /**
@@ -132,7 +157,7 @@ export const { actions: mapActions, reducer: mapReducer } = createSlice({
       action: PayloadAction<IClearNodesInSlotPayload>,
     ) => {
       const { slotId } = action.payload;
-      state.map[slotId] = [];
+      state.mappingObject[slotId] = [];
     },
   },
 });

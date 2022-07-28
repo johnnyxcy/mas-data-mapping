@@ -22,14 +22,16 @@
  */
 import { createSelector } from '@reduxjs/toolkit';
 
-import { FREE_SLOT_ID } from '@data-mapping/types';
+// import { FREE_SLOT_ID } from '@data-mapping/types';
 
-import type { IMappingNode, IMappingSlot } from '@data-mapping/types';
+// import type { IMappingNode, IMappingSlot } from '@data-mapping/types';
+import type { Selector } from '@reduxjs/toolkit';
+
 import type { RootState } from '@data-mapping/store/root.store';
 import type { IMasDataMappingSelection } from '@data-mapping/reducers/select.reducer';
 import type { IMasDataMappingMap } from '@data-mapping/reducers/mapping.reducer';
 import type { IMasDataMappingData } from '@data-mapping/reducers/data.reducer';
-import type { Selector } from '@reduxjs/toolkit';
+import type { IMappingNodeData } from '@data-mapping/_types';
 
 export const dataSelector: Selector<RootState, IMasDataMappingData> = (state) =>
   state.data;
@@ -41,10 +43,10 @@ export const selectionSelector: Selector<
   IMasDataMappingSelection
 > = (state) => state.selection;
 
-export const freeNodesSelector: Selector<RootState, IMappingNode[]> =
+export const freeNodesSelector: Selector<RootState, IMappingNodeData[]> =
   createSelector([dataSelector, mappingSelector], (data, mapping) => {
     let freeNodes = [...data.nodes];
-    for (const [_, mappedNodeIds] of Object.entries(mapping.map)) {
+    for (const [_, mappedNodeIds] of Object.entries(mapping.mappingObject)) {
       freeNodes = freeNodes.filter(
         (node) => mappedNodeIds.indexOf(node.id) === -1,
       );
@@ -53,37 +55,37 @@ export const freeNodesSelector: Selector<RootState, IMappingNode[]> =
     return freeNodes;
   });
 
-export const nodeSelector: (
-  nodeId: string,
-) => Selector<RootState, IMappingNode | undefined> = (nodeId) =>
-  createSelector([dataSelector], (data) =>
-    data.nodes.find((node) => node.id === nodeId),
-  );
+// export const nodeSelector: (
+//   nodeId: string,
+// ) => Selector<RootState, IMappingNodeData | undefined> = (nodeId) =>
+//   createSelector([dataSelector], (data) =>
+//     data.nodes.find((node) => node.id === nodeId),
+//   );
 
-export const slotSelector: (
-  slotId: string,
-) => Selector<RootState, IMappingSlot | undefined> = (slotId) =>
-  createSelector([dataSelector], (data) =>
-    data.slots.find((slot) => slot.id === slotId),
-  );
+// export const slotSelector: (
+//   slotId: string,
+// ) => Selector<RootState, IMappingSlotData | undefined> = (slotId) =>
+//   createSelector([dataSelector], (data) =>
+//     data.slots.find((slot) => slot.id === slotId),
+//   );
 
-export const nodeIdsInSlotSelector: (
-  slotId: string,
-) => Selector<RootState, string[]> = (slotId) =>
-  createSelector([mappingSelector, freeNodesSelector], (mapping, freeNodes) =>
-    slotId === FREE_SLOT_ID
-      ? freeNodes.map((freeNode) => freeNode.id)
-      : mapping.map[slotId] ?? [],
-  );
+// export const nodeIdsInSlotSelector: (
+//   slotId: string,
+// ) => Selector<RootState, string[]> = (slotId) =>
+//   createSelector([mappingSelector, freeNodesSelector], (mapping, freeNodes) =>
+//     slotId === 'free-slot'
+//       ? freeNodes.map((freeNode) => freeNode.id)
+//       : mapping.mappingObject[slotId] ?? [],
+//   );
 
-export const nodesInSlotSelector: (
-  slotId: string,
-) => Selector<RootState, IMappingNode[]> = (slotId) =>
-  createSelector(
-    [nodeIdsInSlotSelector(slotId), dataSelector],
-    (nodeIdsInSlot, data) => {
-      return nodeIdsInSlot.map(
-        (nodeId) => data.nodes.find((node) => node.id === nodeId)!,
-      );
-    },
-  );
+// export const nodesInSlotSelector: (
+//   slotId: string,
+// ) => Selector<RootState, IMappingNodeData[]> = (slotId) =>
+//   createSelector(
+//     [nodeIdsInSlotSelector(slotId), dataSelector],
+//     (nodeIdsInSlot, data) => {
+//       return nodeIdsInSlot.map(
+//         (nodeId) => data.nodes.find((node) => node.id === nodeId)!,
+//       );
+//     },
+//   );

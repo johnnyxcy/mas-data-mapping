@@ -21,5 +21,8 @@
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-export * as types from '@data-mapping/types';
 export { DataMapping as default } from '@data-mapping/DataMapping';
+export type {
+  IMappingNodeProps,
+  IMappingSlotProps,
+} from '@data-mapping/DataMapping';

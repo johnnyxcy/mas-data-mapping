@@ -23,105 +23,109 @@
 
 import React from 'react';
 
-import { Col, Row } from 'antd';
+import { Col, Row, Typography } from 'antd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 
+import InstanceContext from '@data-mapping/_internal/context';
+import { isCtrlCmd } from '@data-mapping/_internal/keyboardUtil';
 import CustomLayer from '@data-mapping/layer/CustomLayer';
 import { FreeSlot } from '@data-mapping/droppable/FreeSlot';
 import { MapSlot } from '@data-mapping/droppable/MapSlot';
+import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
+import {
+  freeNodesSelector,
+  mappingSelector,
+  selectionSelector,
+} from '@data-mapping/store/selector';
 import { createRootStore } from '@data-mapping/store/root.store';
+import {
+  mapActionPrefix,
+  mapActions,
+} from '@data-mapping/reducers/mapping.reducer';
 import { dataActions } from '@data-mapping/reducers/data.reducer';
-import { dataSelector } from '@data-mapping/store/selector';
-import { mapActions } from '@data-mapping/reducers/mapping.reducer';
 import { selectionActions } from '@data-mapping/reducers/select.reducer';
+import { DefaultMaskRender } from '@data-mapping/droppable/maskStyler';
 
-import type {
-  IMappingNode,
-  IMappingObject,
-  IMappingSlotBase,
-  IMappingSlotExtend,
-} from './types';
+import type { IDraggingItem } from '@data-mapping/_internal/dnd';
+import type * as types from './_types';
 
 import '@data-mapping/DataMapping.css';
 
-interface IMappingNodeProps extends IMappingNode {}
-interface IMappingSlotProps
-  extends IMappingSlotBase,
-    Partial<IMappingSlotExtend> {}
-
-const isMac = /mac/i.test(navigator.platform);
-
-const isCtrlCmd = (e: KeyboardEvent) =>
-  (isMac && e.metaKey) || (!isMac && e.ctrlKey);
-
-export interface IDataMappingProps {
+const DataMappingComponent: React.FC<
+  Omit<types.IDataMappingProps, 'onMappingChange'>
+> = ({
+  nodes,
+  slots,
+  freeSlotLabel = 'Available',
+  initialMapping = undefined,
+  // TODO: implement visibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onVisibleChange = undefined,
+}) => {
   /**
-   * @description A unique id to identify the mapping component
+   * redux-hooks
    */
-  id: string;
-
-  /**
-   * @description All nodes available to drag or choose
-   */
-  nodes: IMappingNodeProps[];
-
-  /**
-   * @description All slots available to drop or fill
-   */
-  slots: IMappingSlotProps[];
-
-  /**
-   * @description Pre-mapped object, key is the slot id and the value is the array of node ids
-   * @default {}
-   */
-  mapping?: IMappingObject;
-
-  /**
-   * @description Description for free slot
-   * @default "Available"
-   */
-  freeSlotDescription?: React.ReactNode | (() => React.ReactNode);
-
-  /**
-   * @description callback on map object changed
-   * @default undefined
-   */
-  onMappingChange?: (mapping: IMappingObject) => void;
-}
-
-/** 加入这个只是为了导出子类型, see https://github.com/umijs/dumi/issues/914 */
-// eslint-disable-next-line @typescript-eslint/no-redeclare, @typescript-eslint/no-unused-vars
-export const IMappingNodeProps = (props: IMappingNode) => {};
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare, @typescript-eslint/no-unused-vars
-export const IMappingSlotProps = (props: IMappingSlotProps) => {};
-
-const DataMappingWrap: React.FC<Omit<IDataMappingProps, 'onMappingChange'>> = (
-  props,
-) => {
-  const { id: instanceId, nodes, slots, mapping, freeSlotDescription } = props;
   const dispatch = useDispatch();
-  React.useEffect(() => {
-    dispatch(
-      dataActions.setData({
-        nodes,
-        slots: slots.map((slot) => ({
-          id: slot.id,
-          label: slot.label,
-          /** Fill in all optional arguments */
-          required: slot.required ?? false,
-          visible: slot.visible ?? true,
-          allowMultiple: slot.allowMultiple ?? true,
-        })),
-      }),
-    );
-    if (mapping !== undefined) {
-      dispatch(mapActions.setMapping({ map: mapping }));
-    }
-  }, [dispatch, nodes, slots, mapping]);
+  const { selectedNodes } = useSelector(selectionSelector);
+  const freeNodes = useSelector(freeNodesSelector);
+  const { mappingObject } = useSelector(mappingSelector);
 
+  const nodesData: types.IMappingNodeData[] = React.useMemo(
+    () => nodes,
+    [nodes],
+  );
+
+  const slotsData: types.IMappingSlotData[] = React.useMemo(
+    () =>
+      slots.map((slot) => ({
+        ...slot,
+        allowMultiple: slot.allowMultiple ?? true,
+        required: slot.required ?? false,
+        visible: slot.visible ?? true,
+      })),
+    [slots],
+  );
+
+  React.useEffect(() => {
+    dispatch(dataActions.setData({ nodes: nodesData, slots: slotsData }));
+  }, [dispatch, nodesData, slotsData]);
+
+  React.useEffect(() => {
+    if (initialMapping) {
+      dispatch(mapActions.setMapping({ mappingObject: initialMapping }));
+    }
+  }, [dispatch, initialMapping]);
+
+  // #region Handle any click outside div to cancel current selection
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const onClickOutside = React.useCallback(
+    (e: MouseEvent) => {
+      const { target } = e;
+      if (
+        containerRef.current &&
+        target instanceof Node &&
+        !containerRef.current.contains(target) &&
+        selectedNodes.length !== 0
+      ) {
+        dispatch(selectionActions.clearSelection());
+      }
+    },
+    [dispatch, selectedNodes.length],
+  );
+
+  React.useEffect(() => {
+    window.addEventListener('mouseup', onClickOutside);
+    return () => {
+      window.removeEventListener('mouseup', onClickOutside);
+    };
+  }, [onClickOutside]);
+
+  // #endregion
+
+  // #region Listen to the keyboard event to control selection mode
   React.useEffect(() => {
     const onKeydown = (e: KeyboardEvent) => {
       if (isCtrlCmd(e)) {
@@ -142,92 +146,310 @@ const DataMappingWrap: React.FC<Omit<IDataMappingProps, 'onMappingChange'>> = (
     };
   }, [dispatch]);
 
-  /**
-   * Handle any click outside div to cancel current selection
-   */
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  // #endregion
 
-  const onClickOutside = React.useCallback(
-    (e: MouseEvent) => {
-      const { target } = e;
-      if (
-        containerRef.current &&
-        target instanceof Node &&
-        !containerRef.current.contains(target)
-      ) {
-        dispatch(selectionActions.clearSelection());
-      }
-    },
-    [dispatch, containerRef],
+  // #region callbacks
+
+  /**
+   * Find node in given slotId
+   */
+  const findNodesInSlot = React.useCallback(
+    (slotId: string) =>
+      mappingObject[slotId]?.map(
+        (nodeId) => nodesData.find((nodeData) => nodeData.id === nodeId)!,
+      ) ?? [],
+    [mappingObject, nodesData],
   );
 
-  React.useEffect(() => {
-    window.addEventListener('mousedown', onClickOutside);
-    return () => {
-      window.removeEventListener('mousedown', onClickOutside);
-    };
-  }, [onClickOutside]);
+  /**
+   * If the item can be dropped to slot
+   */
+  const canDropToSlot = React.useCallback(
+    (_item: IDraggingItem, slot: types.IMappingSlotData) => {
+      // TODO: add exclusion pattern feature
+      const { allowMultiple } = slot;
+      if (!allowMultiple) {
+        return selectedNodes.length <= 1;
+      }
+      return true;
+    },
+    [selectedNodes],
+  );
 
-  let freeSlotTitleNode: React.ReactNode = 'Available';
-  if (freeSlotDescription !== undefined) {
-    freeSlotTitleNode =
-      typeof freeSlotDescription === 'function'
-        ? freeSlotDescription()
-        : freeSlotDescription;
-  }
+  const onDropToSlot = React.useCallback(
+    (item: IDraggingItem, slot: types.IMappingSlotData | 'free-slot') => {
+      const nodeIdOrIds =
+        selectedNodes.length === 0
+          ? item.nodeId
+          : selectedNodes.map((node) => node.id);
+      if (slot === 'free-slot') {
+        dispatch(mapActions.removeFromAnySlot({ nodeIdOrIds }));
+      } else {
+        dispatch(
+          mapActions.setToSlot({
+            nodeIdOrIds,
+            slot,
+          }),
+        );
+      }
 
-  const { slots: curSlots } = useSelector(dataSelector);
-  return (
-    <div className="mas-data-mapping-container" ref={containerRef}>
-      <Row>
-        <Col span={24} style={{ padding: '0px 4px 0px 4px' }}>
-          <FreeSlot
-            instanceId={instanceId}
-            description={freeSlotTitleNode}
-            bodyStyle={{ padding: 8, minHeight: 40 }}
+      dispatch(selectionActions.clearSelection());
+    },
+    [dispatch, selectedNodes],
+  );
+
+  const onRemoveNodeFromSlot = React.useCallback(
+    (nodeId: string, slotId: string) => {
+      dispatch(mapActions.removeNodeFromSlot({ nodeId, slotId }));
+      dispatch(selectionActions.clearSelection());
+    },
+    [dispatch],
+  );
+
+  const onSelectNodeInSlot = React.useCallback(
+    (node: types.IMappingNodeData, slotId?: string) => {
+      const nodesInSameSlot =
+        slotId !== undefined ? findNodesInSlot(slotId) : freeNodes;
+      dispatch(
+        selectionActions.toggleNodeSelection({
+          node,
+          nodesInSameSlot,
+        }),
+      );
+    },
+    [dispatch, findNodesInSlot, freeNodes],
+  );
+
+  const onClearSlot = React.useCallback(
+    (slotId: string) => {
+      dispatch(mapActions.clearNodesInSlot({ slotId }));
+    },
+    [dispatch],
+  );
+
+  const onAddNodeInSlot = React.useCallback(
+    (nodeId: string, slot: types.IMappingSlotData) => {
+      dispatch(mapActions.setToSlot({ nodeIdOrIds: nodeId, slot }));
+    },
+    [dispatch],
+  );
+
+  // #endregion
+
+  // #region render
+
+  const renderTag = React.useCallback(
+    (options: {
+      nodeId: string;
+      parentSlotId?: string;
+      label: React.ReactNode;
+      canDrag: boolean;
+      canClose: boolean;
+    }) => {
+      const { nodeId, label, parentSlotId, canDrag, canClose } = options;
+      const isSelected =
+        selectedNodes.findIndex(
+          (selectedNode) => selectedNode.id === nodeId,
+        ) !== -1;
+
+      return (
+        <DraggableNode
+          key={nodeId}
+          nodeId={nodeId}
+          label={label}
+          selected={isSelected}
+          draggable={
+            canDrag
+              ? {
+                  canDrag: isSelected || selectedNodes.length === 0,
+                  isDragging: (item) =>
+                    isSelected ||
+                    (selectedNodes.length === 0 && item.nodeId === nodeId),
+                  endDrag: () => {},
+                }
+              : undefined
+          }
+          closable={
+            canClose && parentSlotId !== undefined
+              ? {
+                  onClose: () => onRemoveNodeFromSlot(nodeId, parentSlotId),
+                }
+              : undefined
+          }
+          onClick={() =>
+            onSelectNodeInSlot({ id: nodeId, label }, parentSlotId)
+          }
+        />
+      );
+    },
+    [onRemoveNodeFromSlot, onSelectNodeInSlot, selectedNodes],
+  );
+
+  const renderSlot = React.useCallback(
+    (options: {
+      slot: types.IMappingSlotData;
+      nodesDataInSlot: types.IMappingNodeData[];
+    }) => {
+      const { slot, nodesDataInSlot } = options;
+      const { id: slotId, required, label: slotLabel } = slot;
+      return (
+        <Col key={slotId} span={8} style={{ padding: '0px 4px 4px 4px' }}>
+          <MapSlot
+            slotId={slotId}
+            label={
+              required ? (
+                <>
+                  {slotLabel}
+                  <Typography.Text strong> *</Typography.Text>
+                </>
+              ) : (
+                slotLabel
+              )
+            }
+            maskRender={DefaultMaskRender}
+            selectOptions={{
+              inSlot: nodesDataInSlot,
+              inFreeSlot: freeNodes,
+              inOtherSlot: [],
+            }}
+            tagRender={(props) =>
+              renderTag({
+                nodeId: props.value,
+                label: props.label,
+                parentSlotId: slotId,
+                canClose: props.closable,
+                canDrag: true,
+              })
+            }
+            onSelect={(nodeId: string) => onAddNodeInSlot(nodeId, slot)}
+            onDeselect={(nodeId: string) =>
+              onRemoveNodeFromSlot(nodeId, slotId)
+            }
+            onClear={() => onClearSlot(slotId)}
+            droppable={{
+              canDrop: (item) => canDropToSlot(item, slot),
+              onDrop: (item) => onDropToSlot(item, slot),
+            }}
           />
         </Col>
-      </Row>
-      <Row style={{ height: 16 }} />
-      <Row justify="start">
-        {curSlots
-          .filter((slot) => slot.visible === true)
-          .map((slot) => (
-            <Col key={slot.id} span={8} style={{ padding: '0px 4px 4px 4px' }}>
-              <MapSlot instanceId={instanceId} id={slot.id} />
-            </Col>
-          ))}
-      </Row>
-    </div>
+      );
+    },
+    [
+      freeNodes,
+      renderTag,
+      onAddNodeInSlot,
+      onRemoveNodeFromSlot,
+      onClearSlot,
+      canDropToSlot,
+      onDropToSlot,
+    ],
+  );
+
+  const slotComponents = React.useMemo(() => {
+    return slotsData
+      .filter((slot) => slot.visible === true)
+      .map((slot) =>
+        renderSlot({
+          slot,
+          nodesDataInSlot: findNodesInSlot(slot.id),
+        }),
+      );
+  }, [findNodesInSlot, renderSlot, slotsData]);
+
+  const freeSlot = React.useMemo(
+    () => (
+      <FreeSlot
+        label={freeSlotLabel}
+        bodyStyle={{ padding: 8, minHeight: 40 }}
+        childNodes={freeNodes.map((freeNode) =>
+          renderTag({
+            nodeId: freeNode.id,
+            label: freeNode.label,
+            canDrag: true,
+            canClose: false,
+          }),
+        )}
+        maskRender={DefaultMaskRender}
+        droppable={{
+          onDrop: (item) => onDropToSlot(item, 'free-slot'),
+        }}
+      />
+    ),
+    [freeNodes, freeSlotLabel, onDropToSlot, renderTag],
+  );
+
+  const dndLayer = React.useMemo(
+    () => <CustomLayer selectedNodes={selectedNodes} />,
+    [selectedNodes],
+  );
+
+  // #endregion
+
+  return (
+    <>
+      {dndLayer}
+      <div className="mas-data-mapping-container" ref={containerRef}>
+        <Row>
+          <Col span={24} style={{ padding: '4px 4px 4px 4px' }}>
+            {freeSlot}
+          </Col>
+        </Row>
+        <Row style={{ height: 16 }} />
+        <Row justify="start">{slotComponents}</Row>
+      </div>
+    </>
   );
 };
 
-export const DataMapping: React.FC<IDataMappingProps> = (props) => {
-  const rootStore = createRootStore();
-  const mappingRef = React.useRef(rootStore.getState().mapping);
-  const { onMappingChange, ...otherProps } = props;
+export const DataMapping = (props: types.IDataMappingProps) => {
+  /**
+   * Create an instance id to differ dnd source
+   */
+  const instanceId = React.useId();
+  const memoedInstanceId = React.useMemo(
+    () => ({
+      instanceId,
+    }),
+    [instanceId],
+  );
+
+  const storeRef = React.useRef(createRootStore());
+
   React.useEffect(() => {
-    if (onMappingChange) {
-      const unsubscribe = rootStore.subscribe(() => {
-        const { mapping } = rootStore.getState();
-        if (mapping !== mappingRef.current) {
-          onMappingChange(mapping.map);
-          mappingRef.current = mapping;
+    const unsubscribe = storeRef.current.subscribe(() => {
+      const { lastAction } = storeRef.current.getState();
+      if (
+        typeof lastAction.type === 'string' &&
+        lastAction.type.startsWith(mapActionPrefix)
+      ) {
+        const {
+          mapping: { mappingObject },
+        } = storeRef.current.getState();
+        if (props.onMappingChange) {
+          props.onMappingChange(mappingObject);
         }
-      });
-      return () => unsubscribe();
-    }
-    return () => {};
-  }, [rootStore, onMappingChange]);
+      }
+    });
+    return unsubscribe;
+  }, [props, storeRef]);
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Provider store={rootStore}>
-        <CustomLayer />
-        <DataMappingWrap {...otherProps} />
-      </Provider>
+      <InstanceContext.Provider value={memoedInstanceId}>
+        <Provider store={storeRef.current}>
+          <DataMappingComponent {...props} />
+        </Provider>
+      </InstanceContext.Provider>
     </DndProvider>
   );
 };
 
+/** Export these for typescript-doc-gen only, see https://github.com/umijs/dumi/issues/914 */
+// eslint-disable-next-line @typescript-eslint/no-redeclare, @typescript-eslint/no-unused-vars
+export const IMappingNodeProps = (props: types.IMappingNodeProps) => {};
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare, @typescript-eslint/no-unused-vars
+export const IMappingSlotProps = (props: types.IMappingSlotProps) => {};
+
+/** Export default Component */
 export default DataMapping;

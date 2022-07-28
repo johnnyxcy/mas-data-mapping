@@ -20,31 +20,39 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import { configureStore } from '@reduxjs/toolkit';
+import type React from 'react';
 
-import { selectionReducer } from '@data-mapping/reducers/select.reducer';
-import { mapReducer } from '@data-mapping/reducers/mapping.reducer';
-import { dataReducer } from '@data-mapping/reducers/data.reducer';
-
-import type { AnyAction } from '@reduxjs/toolkit';
-import type { IMasDataMappingSelection } from '@data-mapping/reducers/select.reducer';
-import type { IMasDataMappingMap } from '@data-mapping/reducers/mapping.reducer';
-import type { IMasDataMappingData } from '@data-mapping/reducers/data.reducer';
-
-export function createRootStore() {
-  return configureStore({
-    reducer: {
-      data: dataReducer,
-      mapping: mapReducer,
-      selection: selectionReducer,
-      lastAction: (_state: any, action: AnyAction) => action,
-    },
-  });
+export enum DragItemTypes {
+  TagNode = 'mas-data-mapping-dnd-tag-node',
 }
 
-export type RootState = {
-  data: IMasDataMappingData;
-  mapping: IMasDataMappingMap;
-  selection: IMasDataMappingSelection;
-  lastAction: AnyAction;
-};
+export function uniqueDragItemType(
+  itemType: DragItemTypes,
+  instanceId: string,
+) {
+  return `${instanceId}@${itemType}`;
+}
+
+export interface IDraggingItem {
+  nodeId: string;
+  type: DragItemTypes;
+  label: React.ReactNode;
+}
+
+export interface IDropTarget {
+  slotId: string;
+  label: React.ReactNode;
+}
+
+// export interface IDraggingNode extends IMappingNode {
+//   fromSlotId: string;
+// }
+
+// export interface IDraggingItem {
+//   sourceNode: IDraggingNode;
+//   draggingNodes: IDraggingNode[];
+// }
+
+// export interface IDropTarget {
+//   targetSlotId: string;
+// }

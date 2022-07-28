@@ -23,132 +23,122 @@
 
 import React from 'react';
 
-import { Card, Select, Typography } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
+import { Card, Select } from 'antd';
 import { useDrop } from 'react-dnd';
 
-import { mapActions } from '@data-mapping/reducers/mapping.reducer';
-import {
-  dataSelector,
-  nodeIdsInSlotSelector,
-  slotSelector,
-} from '@data-mapping/store/selector';
-import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
-import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
+import InstanceContext from '@data-mapping/_internal/context';
+import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
 
-import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
+import { maskContainerStyle } from '@data-mapping/droppable/maskStyler';
 
-import '@data-mapping/droppable/Slot.css';
+import type { SelectProps } from 'rc-select';
+import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
+import type { MaskRenderType } from '@data-mapping/droppable/maskStyler';
 
-export interface IMapSlotProps {
+export interface IMapSlotSelectOption {
   id: string;
-  instanceId: string;
+  label: React.ReactNode;
+}
+
+export interface IMapSlotProps
+  extends Required<Pick<SelectProps, 'tagRender'>>,
+    Required<Pick<SelectProps, 'onSelect'>>,
+    Required<Pick<SelectProps, 'onDeselect'>>,
+    Required<Pick<SelectProps, 'onClear'>> {
+  slotId: string;
+  label: React.ReactNode;
+  selectOptions: {
+    inSlot: IMapSlotSelectOption[];
+    inFreeSlot: IMapSlotSelectOption[];
+    inOtherSlot: IMapSlotSelectOption[];
+  };
+  maskRender: MaskRenderType;
+
+  style?: React.CSSProperties;
+  bodyStyle?: React.CSSProperties;
+
+  droppable?: {
+    canDrop: (item: IDraggingItem) => boolean;
+    onDrop: (item: IDraggingItem) => void;
+  };
 }
 
 interface IDndCollected {
+  isDragging: boolean;
   isOver: boolean;
   canDrop: boolean;
 }
 
-export const MapSlot: React.FC<IMapSlotProps> = (props) => {
-  const { id: slotId, instanceId } = props;
+export const MapSlot: React.FC<IMapSlotProps> = ({
+  slotId,
+  label,
+  /** Antd SelectProps */
+  tagRender,
+  onSelect,
+  onDeselect,
+  onClear,
+  /** end Antd SelectProps */
+  selectOptions: { inSlot, inFreeSlot, inOtherSlot },
+  maskRender,
+  style = undefined,
+  bodyStyle = undefined,
+  droppable = undefined,
+}) => {
+  const { instanceId } = React.useContext(InstanceContext);
 
-  const { nodes } = useSelector(dataSelector);
-  const slot = useSelector(slotSelector(slotId));
-  if (slot === undefined) {
-    throw new Error('Slot not found');
-  }
-  const dispatch = useDispatch();
-
-  const [{ isOver, canDrop }, dropRef] = useDrop<
+  const [{ isDragging, isOver, canDrop }, dropRef] = useDrop<
     IDraggingItem,
     IDropTarget,
     IDndCollected
   >(
     () => ({
       accept: uniqueDragItemType(DragItemTypes.TagNode, instanceId),
-      canDrop: (item) => {
-        if (!slot.allowMultiple && item.draggingNodes.length > 1) {
-          return false;
-        }
-        return true;
-      },
+      canDrop: droppable ? droppable.canDrop : undefined,
       drop: (item) => {
-        const { sourceNode, draggingNodes } = item;
-        if (draggingNodes.length === 0) {
-          dispatch(mapActions.setToSlot({ slot, nodeIdOrIds: sourceNode.id }));
-        } else {
-          draggingNodes.forEach((draggingNode) =>
-            dispatch(
-              mapActions.setToSlot({ slot, nodeIdOrIds: draggingNode.id }),
-            ),
-          );
+        if (droppable) {
+          droppable.onDrop(item);
         }
-        return { targetSlotId: slotId };
+        return { slotId, label };
       },
       collect: (monitor) => ({
+        isDragging: monitor.getItem() !== null,
         isOver: monitor.isOver(),
         canDrop: monitor.canDrop(),
       }),
     }),
-    [dispatch, slotId, slot],
+    [slotId, label, droppable],
   );
 
-  const onSelect = React.useCallback(
-    (nodeId: string) => {
-      dispatch(mapActions.setToSlot({ nodeIdOrIds: nodeId, slot }));
-    },
-    [dispatch, slot],
+  const renderOption = ({
+    id: optionId,
+    label: optionLabel,
+  }: IMapSlotSelectOption) => (
+    <Select.Option key={optionId} value={optionId}>
+      {optionLabel}
+    </Select.Option>
   );
 
-  const onDeselect = React.useCallback(
-    (nodeId: string) => {
-      dispatch(mapActions.removeNodeFromSlot({ nodeId, slotId }));
-    },
-    [dispatch, slotId],
+  const mask = React.useMemo(
+    () => maskRender({ canDrop, isDragging, isOver }),
+    [maskRender, canDrop, isDragging, isOver],
   );
-
-  const onClear = React.useCallback(() => {
-    // dispatch(actions.clearNodesInSlot({ slotId }));
-    dispatch(mapActions.clearNodesInSlot({ slotId }));
-  }, [dispatch, slotId]);
-
-  let cardClassName = `mas-data-mapping-slot-${
-    slot.allowMultiple ? 'multiple' : 'single'
-  }`;
-  if (isOver && canDrop) {
-    cardClassName += ' mas-data-mapping-slot-active';
-  } else if (canDrop) {
-    cardClassName += ' mas-data-mapping-slot-droppable';
-  } else if (isOver) {
-    cardClassName += ' mas-data-mapping-slot-not-droppable';
-  }
-
-  const nodeInSlots = useSelector(nodeIdsInSlotSelector(slotId));
 
   return (
-    <div ref={dropRef}>
+    <div ref={dropRef} className="mas-data-mapping-slot">
+      <div className="mas-data-mapping-slot-mask" style={maskContainerStyle}>
+        {mask}
+      </div>
       <Card
         key={slotId}
-        className={cardClassName}
-        title={
-          slot.required ? (
-            <span>
-              {slot.label}
-              <Typography.Text style={{ fontWeight: 'bold', color: 'red' }}>
-                {' '}
-                *
-              </Typography.Text>
-            </span>
-          ) : (
-            slot.label
-          )
-        }
+        className="mas-data-mapping-slot-card"
+        title={label}
         bordered
         size="small"
+        style={style}
+        bodyStyle={bodyStyle}
       >
         <Select
-          value={nodeInSlots}
+          value={inSlot.map((opt) => opt.id)}
           mode="multiple"
           maxTagCount="responsive"
           bordered={false}
@@ -158,24 +148,17 @@ export const MapSlot: React.FC<IMapSlotProps> = (props) => {
           onDeselect={onDeselect}
           onClear={onClear}
           style={{ width: '100%' }}
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tagRender={({ value }) => (
-            <DraggableNode
-              id={value}
-              slotId={slotId}
-              instanceId={instanceId}
-              closable
-            />
-          )}
+          tagRender={tagRender}
         >
-          {nodes.map((node) => (
-            <Select.Option key={node.id} value={node.id}>
-              {node.label}
-            </Select.Option>
-          ))}
-          {/* <Select.OptGroup label="已选择">{[]}</Select.OptGroup>
-          <Select.OptGroup label="未选择">{[]}</Select.OptGroup>
-          <Select.OptGroup label="替换">{[]}</Select.OptGroup> */}
+          <Select.OptGroup label="已选择">
+            {inSlot.map(renderOption)}
+          </Select.OptGroup>
+          <Select.OptGroup label="未选择">
+            {inFreeSlot.map(renderOption)}
+          </Select.OptGroup>
+          <Select.OptGroup label="替换">
+            {inOtherSlot.map(renderOption)}
+          </Select.OptGroup>
         </Select>
       </Card>
     </div>

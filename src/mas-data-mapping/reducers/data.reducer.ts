@@ -25,11 +25,11 @@ import { createSlice } from '@reduxjs/toolkit';
 
 import type { WritableDraft } from 'immer/dist/types/types-external';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { IMappingNode, IMappingSlot } from '@data-mapping/types';
+import type { IMappingNodeData, IMappingSlotData } from '@data-mapping/_types';
 
 export interface IMasDataMappingData {
-  nodes: IMappingNode[];
-  slots: IMappingSlot[];
+  nodes: IMappingNodeData[];
+  slots: IMappingSlotData[];
 }
 
 export interface IChangeSlotVisiblePayload {
@@ -42,7 +42,11 @@ const initialState: IMasDataMappingData = {
   slots: [],
 };
 
-export const { actions: dataActions, reducer: dataReducer } = createSlice({
+export const {
+  actions: dataActions,
+  reducer: dataReducer,
+  name: dataActionPrefix,
+} = createSlice({
   name: 'mas-data-mapping-data',
   initialState,
   reducers: {

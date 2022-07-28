@@ -20,52 +20,20 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-export const FREE_SLOT_ID = 'mas-data-mapping-free-slot';
 
-export interface IMappingNode {
-  /**
-   * @description A unique id to identify the node
-   */
-  id: string;
+export const isMac = /mac/i.test(navigator.platform);
 
-  /**
-   * @description A label to represent the node
-   */
-  label: string;
-}
+/**
+ * Test if the keyboard event is ctrl key on windows/linus or cmd key on mac
+ * @param e keyboard event
+ * @returns true if is ctrl or cmd
+ */
+export const isCtrlCmd = (e: KeyboardEvent) =>
+  (isMac && e.metaKey) || (!isMac && e.ctrlKey);
 
-export interface IMappingSlotBase {
-  /**
-   * @description A unique id to identify the slot
-   */
-  id: string;
-
-  /**
-   * @description A label to represent the slot
-   */
-  label: string;
-}
-
-export interface IMappingSlotExtend {
-  /**
-   * @description whether the slot allow multiple nodes in it
-   * @default true
-   */
-  allowMultiple: boolean;
-
-  /**
-   * @description whether the slot is required
-   * @default false
-   */
-  required: boolean;
-
-  /**
-   * @description whether the slot is visible at the beginning
-   * @default true
-   */
-  visible: boolean;
-}
-
-export type IMappingSlot = IMappingSlotBase & IMappingSlotExtend;
-
-export type IMappingObject = Record<string, string[]>; // key: slotId, value: nodeIds;
+/**
+ * Test if the keyboard event is shift key
+ * @param e keyboard event
+ * @returns true if is shift
+ */
+export const isShiftKey = (e: KeyboardEvent) => e.shiftKey;

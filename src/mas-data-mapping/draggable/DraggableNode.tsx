@@ -25,53 +25,43 @@ import React from 'react';
 
 import { Tag } from 'antd';
 import { useDrag } from 'react-dnd';
-import { useDispatch, useSelector } from 'react-redux';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
-import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
-import {
-  nodeSelector,
-  nodesInSlotSelector,
-  selectionSelector,
-} from '@data-mapping/store/selector';
-import { selectionActions } from '@data-mapping/reducers/select.reducer';
-import { mapActions } from '@data-mapping/reducers/mapping.reducer';
+import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
+import InstanceContext from '@data-mapping/_internal/context';
 
-import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
+import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
 
 import '@data-mapping/draggable/DraggableNode.css';
 
 export interface IDraggableNodeProps {
-  id: string;
-  slotId: string;
-  instanceId: string;
-  closable?: boolean;
+  nodeId: string;
+  label: React.ReactNode;
+  selected: boolean;
+  closable?: {
+    onClose: () => void;
+  };
+  draggable?: {
+    canDrag: boolean;
+    isDragging: (draggingItem: IDraggingItem) => boolean;
+    endDrag: (didDrop: boolean) => void;
+  };
+  onClick?: () => void;
 }
 
 interface ICollectedProps {
   isDragging: boolean;
 }
 
-export const DraggableNode: React.FC<IDraggableNodeProps> = (props) => {
-  const { id: nodeId, slotId, closable, instanceId } = props;
-
-  const node = useSelector(nodeSelector(nodeId));
-  if (node === undefined) {
-    throw new Error('Node not found');
-  }
-  const nodesInSlot = useSelector(nodesInSlotSelector(slotId));
-  const { selectedNodes } = useSelector(selectionSelector);
-  const isSelected = !!selectedNodes.find(
-    (selectedNode) => selectedNode.id === nodeId,
-  );
-
-  const dispatch = useDispatch();
-
-  // const [isSelected, setSelected] = React.useState<boolean>(false);
-
-  // const clickEventTypeRef = React.useRef<'onMouseDown' | 'onMouseUp'>(
-  //   'onMouseUp',
-  // );
+export const DraggableNode: React.FC<IDraggableNodeProps> = ({
+  nodeId,
+  label,
+  selected,
+  closable = undefined,
+  draggable = undefined,
+  onClick = undefined,
+}) => {
+  const { instanceId } = React.useContext(InstanceContext);
 
   const [{ isDragging }, dragRef, dragPreviewRef] = useDrag<
     IDraggingItem,
@@ -81,74 +71,34 @@ export const DraggableNode: React.FC<IDraggableNodeProps> = (props) => {
     () => ({
       type: uniqueDragItemType(DragItemTypes.TagNode, instanceId),
       item: {
-        sourceNode: { ...node, fromSlotId: slotId },
-        draggingNodes: selectedNodes.map((selectedNode) => ({
-          fromSlotId: slotId,
-          ...selectedNode,
-        })),
+        nodeId,
+        type: DragItemTypes.TagNode,
+        label,
+        // sourceNode: { ...node, fromSlotId: slotId },
+        // draggingNodes: selectedNodes.map((selectedNode) => ({
+        //   fromSlotId: slotId,
+        //   ...selectedNode,
+        // })),
       },
-      canDrag: () => {
-        return isSelected || selectedNodes.length === 0;
-      },
-      isDragging: (monitor) => {
-        const { sourceNode } = monitor.getItem();
-        return (
-          isSelected ||
-          (selectedNodes.length === 0 && sourceNode.id === node.id)
-        );
-      },
-      end: () => {
-        dispatch(selectionActions.clearSelection());
-      },
+      canDrag: () => (draggable === undefined ? false : draggable.canDrag),
+      isDragging: (monitor) =>
+        draggable === undefined
+          ? false
+          : draggable.isDragging(monitor.getItem()),
+      end: draggable
+        ? (_, monitor) => draggable.endDrag(monitor.didDrop())
+        : undefined,
       collect: (monitor) => ({ isDragging: !!monitor.isDragging() }),
     }),
-    [node, nodeId, slotId, selectedNodes, isSelected, instanceId],
+    [instanceId, nodeId, draggable],
   );
 
   React.useEffect(() => {
     dragPreviewRef(getEmptyImage(), { captureDraggingState: true });
   }, [dragPreviewRef]);
 
-  const onClick = React.useCallback(
-    (e: React.MouseEvent<HTMLSpanElement>) => {
-      dispatch(
-        selectionActions.toggleNodeSelection({
-          node,
-          nodesInSameSlot: nodesInSlot,
-        }),
-      );
-      e.stopPropagation();
-    },
-    [dispatch, node, nodesInSlot],
-  );
-
-  // const onMouseUp = React.useCallback(
-  //   (e: React.MouseEvent<HTMLSpanElement>) => {
-  //     if (clickEventTypeRef.current !== 'onMouseUp') {
-  //       setSelected(!isSelected);
-  //       dispatch(
-  //         actions.changeNodeSelection({
-  //           nodeId,
-  //           type: isSelected ? 'deselect' : 'select',
-  //         }),
-  //       );
-  //     } else {
-  //       console.log('NOT CLICK');
-  //     }
-  //     e.stopPropagation();
-  //   },
-  //   [clickEventTypeRef, nodeId, isSelected, setSelected, dispatch],
-  // );
-
-  const onClose = React.useCallback(() => {
-    dispatch(mapActions.removeNodeFromSlot({ nodeId, slotId }));
-    if (selectedNodes.length > 0) {
-      dispatch(selectionActions.clearSelection());
-    }
-  }, [dispatch, nodeId, slotId, selectedNodes]);
-
   let tagClassName = 'mas-data-mapping-tag-node';
-  if (isSelected) {
+  if (selected) {
     tagClassName += ' mas-data-mapping-tag-node-selected';
   }
 
@@ -157,13 +107,12 @@ export const DraggableNode: React.FC<IDraggableNodeProps> = (props) => {
       <Tag
         key={nodeId}
         className={tagClassName}
-        onClose={onClose}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onClick}
-        // onMouseUp={onMouseUp}
-        closable={closable}
+        closable={closable !== undefined}
+        onClose={closable?.onClose}
       >
-        {node.label}
+        {label}
       </Tag>
     </div>
   );

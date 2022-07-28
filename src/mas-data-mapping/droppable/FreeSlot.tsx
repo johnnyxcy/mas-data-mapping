@@ -24,92 +24,88 @@
 import React from 'react';
 
 import { Card, Space } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
 import { useDrop } from 'react-dnd';
 
-import { DraggableNode } from '@data-mapping/draggable/DraggableNode';
-import { DragItemTypes, uniqueDragItemType } from '@data-mapping/dnd';
-import { freeNodesSelector } from '@data-mapping/store/selector';
-import { mapActions } from '@data-mapping/reducers/mapping.reducer';
-import { FREE_SLOT_ID } from '@data-mapping/types';
+import { maskContainerStyle } from '@data-mapping/droppable/maskStyler';
+import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
+import InstanceContext from '@data-mapping/_internal/context';
 
-import type { IDraggingItem, IDropTarget } from '@data-mapping/dnd';
-
-import '@data-mapping/droppable/Slot.css';
+import type { MaskRenderType } from '@data-mapping/droppable/maskStyler';
+import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
 
 export interface IFreeSlotProps {
-  instanceId: string;
-  description: React.ReactNode;
+  label: React.ReactNode;
+  childNodes: React.ReactNode[];
+
+  maskRender: MaskRenderType;
+
   style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
+
+  droppable?: {
+    onDrop: (item: IDraggingItem) => void;
+  };
 }
 
-export const FreeSlot: React.FC<IFreeSlotProps> = (props) => {
-  const { instanceId, description, style, bodyStyle } = props;
-  const freeNodes = useSelector(freeNodesSelector);
+interface IDndCollected {
+  isDragging: boolean;
+  isOver: boolean;
+  canDrop: boolean;
+}
 
-  const dispatch = useDispatch();
+export const FreeSlot: React.FC<IFreeSlotProps> = ({
+  label,
+  childNodes,
+  maskRender,
+  style = undefined,
+  bodyStyle = undefined,
+  droppable = undefined,
+}) => {
+  const { instanceId } = React.useContext(InstanceContext);
 
-  const [{ isOver, canDrop }, dropRef] = useDrop<
+  const [{ isOver, canDrop, isDragging }, dropRef] = useDrop<
     IDraggingItem,
     IDropTarget,
-    { isOver: boolean; canDrop: boolean }
-  >(() => ({
-    accept: uniqueDragItemType(DragItemTypes.TagNode, instanceId),
-    drop: (item) => {
-      const { sourceNode, draggingNodes } = item;
-      if (draggingNodes.length === 0) {
-        dispatch(
-          mapActions.removeNodeFromSlot({
-            slotId: sourceNode.fromSlotId,
-            nodeId: sourceNode.id,
-          }),
-        );
-      } else {
-        draggingNodes.forEach((draggingNode) =>
-          dispatch(
-            mapActions.removeNodeFromSlot({
-              slotId: draggingNode.fromSlotId,
-              nodeId: draggingNode.id,
-            }),
-          ),
-        );
-      }
-      return { targetSlotId: FREE_SLOT_ID };
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
+    IDndCollected
+  >(
+    () => ({
+      accept: uniqueDragItemType(DragItemTypes.TagNode, instanceId),
+      canDrop: () => droppable !== undefined,
+      drop: (item) => {
+        if (droppable) {
+          droppable.onDrop(item);
+        }
+        return { slotId: `${instanceId}@free-slot`, label };
+      },
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+        isDragging: monitor.getItem() !== null,
+      }),
     }),
-  }));
-  let cardClassName = 'mas-data-mapping-slot-multiple';
-  if (isOver && canDrop) {
-    cardClassName += ' mas-data-mapping-slot-active';
-  } else if (canDrop) {
-    cardClassName += ' mas-data-mapping-slot-droppable';
-  } else if (isOver) {
-    cardClassName += ' mas-data-mapping-slot-not-droppable';
-  }
+    [droppable],
+  );
+
+  const mask = React.useMemo(
+    () => maskRender({ canDrop, isDragging, isOver }),
+    [maskRender, canDrop, isDragging, isOver],
+  );
+
   return (
-    <div ref={dropRef}>
+    <div ref={dropRef} className="mas-data-mapping-slot">
+      <div className="mas-data-mapping-slot-mask" style={maskContainerStyle}>
+        {mask}
+      </div>
       <Card
-        key={FREE_SLOT_ID}
-        className={cardClassName}
-        style={style}
-        title={description}
+        className="mas-data-mapping-slot-card"
+        title={label}
+        bordered
         size="small"
-        bodyStyle={bodyStyle}
+        style={{ ...style, zIndex: 6 }}
+        bodyStyle={{ ...bodyStyle, zIndex: 6 }}
       >
         <Space wrap size={4}>
-          {freeNodes.map((node) => (
-            <DraggableNode
-              key={node.id}
-              id={node.id}
-              slotId={FREE_SLOT_ID}
-              instanceId={instanceId}
-              closable={false}
-            />
-          ))}
+          {childNodes}
         </Space>
       </Card>
     </div>
