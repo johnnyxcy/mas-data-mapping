@@ -36,6 +36,7 @@ $ npm install
 
 import React from 'react';
 import DataMapping from 'mas-data-mapping';
+import { Alert, Divider } from 'antd';
 
 const demoData = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 const nodes = demoData.map((colName) => ({ id: colName, label: colName }));
@@ -76,7 +77,37 @@ const slots = [
   },
 ];
 
-export default () => <DataMapping id="demo1" nodes={nodes} slots={slots} />;
+export default () => {
+  const [mappingHistoryList, setMappingHistoryList] = React.useState([]);
+
+  const onMappingChange = React.useCallback(
+    (mapping) => setMappingHistoryList(mappingHistoryList.concat(mapping)),
+    [mappingHistoryList],
+  );
+
+  return (
+    <>
+      <DataMapping
+        nodes={nodes}
+        slots={slots}
+        onMappingChange={onMappingChange}
+      />
+      <Divider orientation="left" plain>
+        Action History
+      </Divider>
+      <div>
+        {mappingHistoryList.map((mappingHistory, index) => (
+          <Alert
+            key={`mapping-history-${index}`}
+            message={`Mapping Updated: ${JSON.stringify(mappingHistory)}`}
+            type="info"
+            showIcon
+          />
+        ))}
+      </div>
+    </>
+  );
+};
 ```
 
 ## Development
