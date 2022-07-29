@@ -381,14 +381,14 @@ const DataMappingComponent: React.FC<
   return (
     <>
       {dndLayer}
-      <div className="mas-data-mapping-container" ref={containerRef}>
+      <div className='mas-data-mapping-container' ref={containerRef}>
         <Row>
           <Col span={24} style={{ padding: '4px 4px 4px 4px' }}>
             {freeSlot}
           </Col>
         </Row>
         <Row style={{ height: 16 }} />
-        <Row justify="start">{slotComponents}</Row>
+        <Row justify='start'>{slotComponents}</Row>
       </div>
     </>
   );

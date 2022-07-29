@@ -97,7 +97,7 @@ export const DraggableNode: React.FC<IDraggableNodeProps> = ({
     <div ref={dragRef} style={{ opacity: isDragging ? 0 : 1 }}>
       <Tag
         key={nodeId}
-        className="mas-data-mapping-tag-node"
+        className='mas-data-mapping-tag-node'
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onClick}
         closable={closable !== undefined}

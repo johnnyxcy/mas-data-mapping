@@ -124,23 +124,23 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
   );
 
   return (
-    <div ref={dropRef} className="mas-data-mapping-slot">
-      <div className="mas-data-mapping-slot-mask" style={maskContainerStyle}>
+    <div ref={dropRef} className='mas-data-mapping-slot'>
+      <div className='mas-data-mapping-slot-mask' style={maskContainerStyle}>
         {mask}
       </div>
       <Card
         key={slotId}
-        className="mas-data-mapping-slot-card"
+        className='mas-data-mapping-slot-card'
         title={label}
         bordered
-        size="small"
+        size='small'
         style={style}
         bodyStyle={bodyStyle}
       >
         <Select
           value={inSlot.map((opt) => opt.id)}
-          mode="multiple"
-          maxTagCount="responsive"
+          mode='multiple'
+          maxTagCount='responsive'
           bordered={false}
           allowClear
           showArrow={false}
@@ -150,13 +150,13 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
           style={{ width: '100%' }}
           tagRender={tagRender}
         >
-          <Select.OptGroup label="已选择">
+          <Select.OptGroup label='已选择'>
             {inSlot.map(renderOption)}
           </Select.OptGroup>
-          <Select.OptGroup label="未选择">
+          <Select.OptGroup label='未选择'>
             {inFreeSlot.map(renderOption)}
           </Select.OptGroup>
-          <Select.OptGroup label="替换">
+          <Select.OptGroup label='替换'>
             {inOtherSlot.map(renderOption)}
           </Select.OptGroup>
         </Select>

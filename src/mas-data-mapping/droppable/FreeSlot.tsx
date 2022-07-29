@@ -92,15 +92,15 @@ export const FreeSlot: React.FC<IFreeSlotProps> = ({
   );
 
   return (
-    <div ref={dropRef} className="mas-data-mapping-slot">
-      <div className="mas-data-mapping-slot-mask" style={maskContainerStyle}>
+    <div ref={dropRef} className='mas-data-mapping-slot'>
+      <div className='mas-data-mapping-slot-mask' style={maskContainerStyle}>
         {mask}
       </div>
       <Card
-        className="mas-data-mapping-slot-card"
+        className='mas-data-mapping-slot-card'
         title={label}
         bordered
-        size="small"
+        size='small'
         style={{ ...style, zIndex: 6 }}
         bodyStyle={{ ...bodyStyle, zIndex: 6 }}
       >

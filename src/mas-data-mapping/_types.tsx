@@ -131,7 +131,7 @@ export interface IDataMappingProps {
   onVisibleChange?: (slotId: string, visible: boolean) => void;
 
   /**
-   * @description render slot mask
+   * @description Render slot mask
    */
   slotMaskRenderer?: ISlotMaskRenderer;
 

@@ -68,7 +68,7 @@ const CustomLayer: React.FC<ICustomDnDLayerProps> = ({
     return (
       <Badge count={nSelected === 1 ? 0 : nSelected}>
         <Tag
-          className="mas-data-mapping-tag-node"
+          className='mas-data-mapping-tag-node'
           style={tagStyler({
             node: { id: item.nodeId, label: item.label },
             selected: true,
