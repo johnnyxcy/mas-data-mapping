@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -29,11 +29,11 @@ import { useDrop } from 'react-dnd';
 import InstanceContext from '@data-mapping/_internal/context';
 import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
 
-import { maskContainerStyle } from '@data-mapping/droppable/maskStyler';
+import { maskContainerStyle } from '@data-mapping/styler';
 
 import type { SelectProps } from 'rc-select';
 import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
-import type { MaskRenderType } from '@data-mapping/droppable/maskStyler';
+import type { IMappingSlotData, ISlotMaskRenderer } from '@data-mapping/_types';
 
 export interface IMapSlotSelectOption {
   id: string;
@@ -45,14 +45,13 @@ export interface IMapSlotProps
     Required<Pick<SelectProps, 'onSelect'>>,
     Required<Pick<SelectProps, 'onDeselect'>>,
     Required<Pick<SelectProps, 'onClear'>> {
-  slotId: string;
-  label: React.ReactNode;
+  slotData: IMappingSlotData;
   selectOptions: {
     inSlot: IMapSlotSelectOption[];
     inFreeSlot: IMapSlotSelectOption[];
     inOtherSlot: IMapSlotSelectOption[];
   };
-  maskRender: MaskRenderType;
+  maskRender: ISlotMaskRenderer;
 
   style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
@@ -70,8 +69,7 @@ interface IDndCollected {
 }
 
 export const MapSlot: React.FC<IMapSlotProps> = ({
-  slotId,
-  label,
+  slotData,
   /** Antd SelectProps */
   tagRender,
   onSelect,
@@ -85,6 +83,8 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
   droppable = undefined,
 }) => {
   const { instanceId } = React.useContext(InstanceContext);
+
+  const { id: slotId, label } = slotData;
 
   const [{ isDragging, isOver, canDrop }, dropRef] = useDrop<
     IDraggingItem,
@@ -119,8 +119,8 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
   );
 
   const mask = React.useMemo(
-    () => maskRender({ canDrop, isDragging, isOver }),
-    [maskRender, canDrop, isDragging, isOver],
+    () => maskRender({ slot: slotData, canDrop, isDragging, isOver }),
+    [maskRender, slotData, canDrop, isDragging, isOver],
   );
 
   return (

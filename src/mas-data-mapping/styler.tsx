@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,14 +20,17 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import {
+  DownloadOutlined,
+  ClearOutlined,
+  StopOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 
-export type MaskRenderType = (props: {
-  isDragging: boolean;
-  canDrop: boolean;
-  isOver: boolean;
-}) => React.ReactElement;
+import type { ISlotMaskRenderer, ITagNodeStyler } from '@data-mapping/_types';
 
-export const DefaultMaskRender: MaskRenderType = ({
+export const DefaultSlotMaskRender: ISlotMaskRenderer = ({
+  slot,
   isDragging,
   canDrop,
   isOver,
@@ -35,7 +38,9 @@ export const DefaultMaskRender: MaskRenderType = ({
   <div
     style={{
       // display: isDragging ? 'block' : 'none',
-      display: isDragging ? 'block' : 'none',
+      display: isDragging ? 'flex' : 'none',
+      alignItems: 'center',
+      justifyContent: 'center',
 
       /** Fit content */
       height: '100%',
@@ -57,12 +62,32 @@ export const DefaultMaskRender: MaskRenderType = ({
       MozBoxSizing: 'border-box',
       borderWidth: 4,
       borderStyle: 'dashed',
-      borderColor: isOver
-        ? 'var(--ant-success-color-deprecated-border)'
-        : 'transparent',
+      borderColor:
+        isOver && canDrop
+          ? 'var(--ant-success-color-deprecated-border)'
+          : 'transparent',
     }}
-  />
+  >
+    {canDrop ? (
+      slot === 'free-slot' ? (
+        <ClearOutlined style={{ fontSize: 36 }} />
+      ) : slot.allowMultiple ? (
+        <DownloadOutlined style={{ fontSize: 36 }} />
+      ) : (
+        <SyncOutlined style={{ fontSize: 36 }} />
+      )
+    ) : (
+      <StopOutlined style={{ fontSize: 36 }} />
+    )}
+  </div>
 );
+
+export const DefaultTagNodeStyler: ITagNodeStyler = ({ selected }) => ({
+  backgroundColor: selected ? 'var(--ant-primary-color)' : undefined,
+  color: selected ? '#fff' : undefined,
+  minWidth: 40,
+  textAlign: 'center',
+});
 
 export const maskContainerStyle: Readonly<React.CSSProperties> = {
   /** stretch to fit parent */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,7 +23,7 @@
 
 import React from 'react';
 
-import { Col, Row, Typography } from 'antd';
+import { Col, Row } from 'antd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
 import { Provider, useDispatch, useSelector } from 'react-redux';
@@ -46,7 +46,10 @@ import {
 } from '@data-mapping/reducers/mapping.reducer';
 import { dataActions } from '@data-mapping/reducers/data.reducer';
 import { selectionActions } from '@data-mapping/reducers/select.reducer';
-import { DefaultMaskRender } from '@data-mapping/droppable/maskStyler';
+import {
+  DefaultSlotMaskRender,
+  DefaultTagNodeStyler,
+} from '@data-mapping/styler';
 
 import type { IDraggingItem } from '@data-mapping/_internal/dnd';
 import type * as types from './_types';
@@ -58,6 +61,8 @@ const DataMappingComponent: React.FC<
 > = ({
   nodes,
   slots,
+  slotMaskRenderer = DefaultSlotMaskRender,
+  tagNodeStyler = DefaultTagNodeStyler,
   freeSlotLabel = 'Available',
   initialMapping = undefined,
   // TODO: implement visibility
@@ -240,31 +245,30 @@ const DataMappingComponent: React.FC<
 
   const renderTag = React.useCallback(
     (options: {
-      nodeId: string;
-      parentSlotId?: string;
-      label: React.ReactNode;
+      node: types.IMappingNodeData;
       canDrag: boolean;
       canClose: boolean;
+      parentSlotId?: string;
     }) => {
-      const { nodeId, label, parentSlotId, canDrag, canClose } = options;
+      const { node, parentSlotId, canDrag, canClose } = options;
       const isSelected =
         selectedNodes.findIndex(
-          (selectedNode) => selectedNode.id === nodeId,
+          (selectedNode) => selectedNode.id === node.id,
         ) !== -1;
 
       return (
         <DraggableNode
-          key={nodeId}
-          nodeId={nodeId}
-          label={label}
+          key={node.id}
+          node={node}
           selected={isSelected}
+          tagStyler={tagNodeStyler}
           draggable={
             canDrag
               ? {
                   canDrag: isSelected || selectedNodes.length === 0,
                   isDragging: (item) =>
                     isSelected ||
-                    (selectedNodes.length === 0 && item.nodeId === nodeId),
+                    (selectedNodes.length === 0 && item.nodeId === node.id),
                   endDrag: () => {},
                 }
               : undefined
@@ -272,17 +276,15 @@ const DataMappingComponent: React.FC<
           closable={
             canClose && parentSlotId !== undefined
               ? {
-                  onClose: () => onRemoveNodeFromSlot(nodeId, parentSlotId),
+                  onClose: () => onRemoveNodeFromSlot(node.id, parentSlotId),
                 }
               : undefined
           }
-          onClick={() =>
-            onSelectNodeInSlot({ id: nodeId, label }, parentSlotId)
-          }
+          onClick={() => onSelectNodeInSlot(node, parentSlotId)}
         />
       );
     },
-    [onRemoveNodeFromSlot, onSelectNodeInSlot, selectedNodes],
+    [onRemoveNodeFromSlot, onSelectNodeInSlot, selectedNodes, tagNodeStyler],
   );
 
   const renderSlot = React.useCallback(
@@ -291,22 +293,12 @@ const DataMappingComponent: React.FC<
       nodesDataInSlot: types.IMappingNodeData[];
     }) => {
       const { slot, nodesDataInSlot } = options;
-      const { id: slotId, required, label: slotLabel } = slot;
+      const { id: slotId } = slot;
       return (
         <Col key={slotId} span={8} style={{ padding: '0px 4px 4px 4px' }}>
           <MapSlot
-            slotId={slotId}
-            label={
-              required ? (
-                <>
-                  {slotLabel}
-                  <Typography.Text strong> *</Typography.Text>
-                </>
-              ) : (
-                slotLabel
-              )
-            }
-            maskRender={DefaultMaskRender}
+            slotData={slot}
+            maskRender={slotMaskRenderer}
             selectOptions={{
               inSlot: nodesDataInSlot,
               inFreeSlot: freeNodes,
@@ -314,8 +306,7 @@ const DataMappingComponent: React.FC<
             }}
             tagRender={(props) =>
               renderTag({
-                nodeId: props.value,
-                label: props.label,
+                node: { id: props.value, label: props.label },
                 parentSlotId: slotId,
                 canClose: props.closable,
                 canDrag: true,
@@ -335,6 +326,7 @@ const DataMappingComponent: React.FC<
       );
     },
     [
+      slotMaskRenderer,
       freeNodes,
       renderTag,
       onAddNodeInSlot,
@@ -363,24 +355,25 @@ const DataMappingComponent: React.FC<
         bodyStyle={{ padding: 8, minHeight: 40 }}
         childNodes={freeNodes.map((freeNode) =>
           renderTag({
-            nodeId: freeNode.id,
-            label: freeNode.label,
+            node: freeNode,
             canDrag: true,
             canClose: false,
           }),
         )}
-        maskRender={DefaultMaskRender}
+        maskRender={slotMaskRenderer}
         droppable={{
           onDrop: (item) => onDropToSlot(item, 'free-slot'),
         }}
       />
     ),
-    [freeNodes, freeSlotLabel, onDropToSlot, renderTag],
+    [freeNodes, freeSlotLabel, onDropToSlot, renderTag, slotMaskRenderer],
   );
 
   const dndLayer = React.useMemo(
-    () => <CustomLayer selectedNodes={selectedNodes} />,
-    [selectedNodes],
+    () => (
+      <CustomLayer tagStyler={tagNodeStyler} selectedNodes={selectedNodes} />
+    ),
+    [selectedNodes, tagNodeStyler],
   );
 
   // #endregion

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -21,6 +21,8 @@
  * THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import type React from 'react';
+
+import type { IDraggingItem } from '@data-mapping/_internal/dnd';
 
 export interface IMappingNodeProps {
   /**
@@ -68,6 +70,23 @@ export interface IMappingSlotProps {
 
 export type IMappingSlotData = Required<IMappingSlotProps>;
 
+export type ISlotMaskRenderer = (props: {
+  slot: IMappingSlotData | 'free-slot';
+  isDragging: boolean;
+  canDrop: boolean;
+  isOver: boolean;
+}) => React.ReactElement;
+
+export type ITagNodeStyler = (props: {
+  node: IMappingNodeData;
+  selected: boolean;
+}) => React.CSSProperties;
+
+export type IDraggingItemRenderer = (props: {
+  draggingSource: IDraggingItem;
+  selectedNodes: IMappingNodeData[];
+}) => React.ReactElement;
+
 export type IMappingObject = Record<string, string[]>;
 
 export interface IDataMappingProps {
@@ -100,8 +119,24 @@ export interface IDataMappingProps {
   onMappingChange?: (mapping: IMappingObject) => void;
 
   /**
+   * @description Whether to show hidden slot
+   * @default false
+   */
+  showHidden?: boolean;
+
+  /**
    * @description Callback on slot visibility changed
    * @default undefined
    */
   onVisibleChange?: (slotId: string, visible: boolean) => void;
+
+  /**
+   * @description render slot mask
+   */
+  slotMaskRenderer?: ISlotMaskRenderer;
+
+  /**
+   * @description style tag node
+   */
+  tagNodeStyler?: ITagNodeStyler;
 }

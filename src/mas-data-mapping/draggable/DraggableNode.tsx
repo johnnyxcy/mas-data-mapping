@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -31,13 +31,12 @@ import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
 import InstanceContext from '@data-mapping/_internal/context';
 
 import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
-
-import '@data-mapping/draggable/DraggableNode.css';
+import type { IMappingNodeData, ITagNodeStyler } from '@data-mapping/_types';
 
 export interface IDraggableNodeProps {
-  nodeId: string;
-  label: React.ReactNode;
+  node: IMappingNodeData;
   selected: boolean;
+  tagStyler: ITagNodeStyler;
   closable?: {
     onClose: () => void;
   };
@@ -54,14 +53,16 @@ interface ICollectedProps {
 }
 
 export const DraggableNode: React.FC<IDraggableNodeProps> = ({
-  nodeId,
-  label,
+  node,
   selected,
+  tagStyler,
   closable = undefined,
   draggable = undefined,
   onClick = undefined,
 }) => {
   const { instanceId } = React.useContext(InstanceContext);
+
+  const { id: nodeId, label } = node;
 
   const [{ isDragging }, dragRef, dragPreviewRef] = useDrag<
     IDraggingItem,
@@ -74,11 +75,6 @@ export const DraggableNode: React.FC<IDraggableNodeProps> = ({
         nodeId,
         type: DragItemTypes.TagNode,
         label,
-        // sourceNode: { ...node, fromSlotId: slotId },
-        // draggingNodes: selectedNodes.map((selectedNode) => ({
-        //   fromSlotId: slotId,
-        //   ...selectedNode,
-        // })),
       },
       canDrag: () => (draggable === undefined ? false : draggable.canDrag),
       isDragging: (monitor) =>
@@ -97,20 +93,16 @@ export const DraggableNode: React.FC<IDraggableNodeProps> = ({
     dragPreviewRef(getEmptyImage(), { captureDraggingState: true });
   }, [dragPreviewRef]);
 
-  let tagClassName = 'mas-data-mapping-tag-node';
-  if (selected) {
-    tagClassName += ' mas-data-mapping-tag-node-selected';
-  }
-
   return (
     <div ref={dragRef} style={{ opacity: isDragging ? 0 : 1 }}>
       <Tag
         key={nodeId}
-        className={tagClassName}
+        className="mas-data-mapping-tag-node"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onClick}
         closable={closable !== undefined}
         onClose={closable?.onClose}
+        style={tagStyler({ node, selected })}
       >
         {label}
       </Tag>

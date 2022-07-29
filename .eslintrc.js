@@ -64,6 +64,7 @@ module.exports = {
     'no-param-reassign': ['error', { props: false }],
     'no-restricted-syntax': 'off',
     'no-restricted-exports': 'off',
+    'no-nested-ternary': 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
       { destructuredArrayIgnorePattern: '^_' },

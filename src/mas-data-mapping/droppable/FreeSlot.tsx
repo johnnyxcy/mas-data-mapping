@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -26,18 +26,18 @@ import React from 'react';
 import { Card, Space } from 'antd';
 import { useDrop } from 'react-dnd';
 
-import { maskContainerStyle } from '@data-mapping/droppable/maskStyler';
+import { maskContainerStyle } from '@data-mapping/styler';
 import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
 import InstanceContext from '@data-mapping/_internal/context';
 
-import type { MaskRenderType } from '@data-mapping/droppable/maskStyler';
+import type { ISlotMaskRenderer } from '@data-mapping/_types';
 import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
 
 export interface IFreeSlotProps {
   label: React.ReactNode;
   childNodes: React.ReactNode[];
 
-  maskRender: MaskRenderType;
+  maskRender: ISlotMaskRenderer;
 
   style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
@@ -87,7 +87,7 @@ export const FreeSlot: React.FC<IFreeSlotProps> = ({
   );
 
   const mask = React.useMemo(
-    () => maskRender({ canDrop, isDragging, isOver }),
+    () => maskRender({ slot: 'free-slot', canDrop, isDragging, isOver }),
     [maskRender, canDrop, isDragging, isOver],
   );
 

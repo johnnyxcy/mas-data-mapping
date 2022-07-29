@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 ${company}
+ * Copyright (c) 2022 Chongyi Xu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -28,7 +28,11 @@ import { useDragLayer } from 'react-dnd';
 
 import type { XYCoord } from 'react-dnd';
 import type { IDraggingItem } from '@data-mapping/_internal/dnd';
-import type { IMappingNodeProps } from '@data-mapping/_types';
+import type {
+  IDraggingItemRenderer,
+  IMappingNodeProps,
+  ITagNodeStyler,
+} from '@data-mapping/_types';
 
 interface ICollectedProps {
   item: IDraggingItem;
@@ -38,9 +42,15 @@ interface ICollectedProps {
 
 interface ICustomDnDLayerProps {
   selectedNodes: IMappingNodeProps[];
+  tagStyler: ITagNodeStyler;
+  draggingItemRenderer?: IDraggingItemRenderer;
 }
 
-const CustomLayer: React.FC<ICustomDnDLayerProps> = ({ selectedNodes }) => {
+const CustomLayer: React.FC<ICustomDnDLayerProps> = ({
+  selectedNodes,
+  tagStyler,
+  draggingItemRenderer = undefined,
+}) => {
   const { item, isDragging, currentOffset } = useDragLayer<
     ICollectedProps,
     IDraggingItem
@@ -51,11 +61,28 @@ const CustomLayer: React.FC<ICustomDnDLayerProps> = ({ selectedNodes }) => {
   }));
   const nSelected = React.useMemo(() => selectedNodes.length, [selectedNodes]);
 
+  const renderDraggingItem = React.useCallback(() => {
+    if (draggingItemRenderer) {
+      return draggingItemRenderer({ draggingSource: item, selectedNodes });
+    }
+    return (
+      <Badge count={nSelected === 1 ? 0 : nSelected}>
+        <Tag
+          className="mas-data-mapping-tag-node"
+          style={tagStyler({
+            node: { id: item.nodeId, label: item.label },
+            selected: true,
+          })}
+        >
+          {nSelected <= 1 ? item.label : `${nSelected} selected`}
+        </Tag>
+      </Badge>
+    );
+  }, [draggingItemRenderer, item, nSelected, selectedNodes, tagStyler]);
+
   if (!isDragging || !currentOffset) {
     return null;
   }
-
-  const label = nSelected <= 1 ? item.label : `选中了 ${nSelected} 个`;
 
   const transform = `translate(${currentOffset.x}px, ${currentOffset.y}px)`;
 
@@ -72,11 +99,7 @@ const CustomLayer: React.FC<ICustomDnDLayerProps> = ({ selectedNodes }) => {
       }}
     >
       <div style={{ transform, WebkitTransform: transform }}>
-        <Badge count={nSelected === 1 ? 0 : nSelected}>
-          <Tag className="mas-data-mapping-tag-node mas-data-mapping-tag-node-selected">
-            {label}
-          </Tag>
-        </Badge>
+        {renderDraggingItem()}
       </div>
     </div>
   );
