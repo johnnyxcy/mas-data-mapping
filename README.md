@@ -36,7 +36,7 @@ $ npm install
 
 import React from 'react';
 import DataMapping from 'mas-data-mapping';
-import { Alert, Divider, Space } from 'antd';
+import { Alert, Divider, Space, Switch } from 'antd';
 
 const demoData = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 const nodes = demoData.map((colName) => ({ id: colName, label: colName }));
@@ -71,8 +71,8 @@ const slots = [
     visible: true,
   },
   {
-    id: 'hiddenSlot',
-    label: 'hiddenSlot',
+    id: 'HiddenSlot',
+    label: 'HiddenSlot',
     visible: false,
   },
 ];
@@ -80,11 +80,14 @@ const slots = [
 type MappingType = Record<string, string[]>;
 const initialMapping: MappingType = {};
 initialMapping['SingleOptional'] = ['E'];
+initialMapping['HiddenSlot'] = ['F'];
 
 export default () => {
   const [mappingHistoryList, setMappingHistoryList] = React.useState<
     MappingType[]
   >([]);
+
+  const [showHidden, setShowHidden] = React.useState<boolean>(true);
 
   const onMappingChange = React.useCallback(
     (mapping: MappingType) =>
@@ -98,7 +101,7 @@ export default () => {
         <Alert
           key={`mapping-history-${index}`}
           message={`Mapping Updated: ${JSON.stringify(mappingHistory)}`}
-          type="info"
+          type='info'
           showIcon
           closable
         />
@@ -108,16 +111,23 @@ export default () => {
 
   return (
     <>
+      <div style={{ padding: 12 }}>
+        <Space>
+          Show Hidden: <Switch checked={showHidden} onChange={setShowHidden} />
+        </Space>
+      </div>
+      <br />
       <DataMapping
         nodes={nodes}
         slots={slots}
+        showHidden={showHidden}
         initialMapping={initialMapping}
         onMappingChange={onMappingChange}
       />
-      <Divider orientation="left" plain>
+      <Divider orientation='left' plain>
         Action History
       </Divider>
-      <Space direction="vertical" style={{ width: '-webkit-fill-available' }}>
+      <Space direction='vertical' style={{ width: '-webkit-fill-available' }}>
         {mappingHistoryAlerts}
       </Space>
     </>

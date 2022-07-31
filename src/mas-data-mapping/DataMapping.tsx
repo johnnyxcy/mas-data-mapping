@@ -48,8 +48,10 @@ import { dataActions } from '@data-mapping/reducers/data.reducer';
 import { selectionActions } from '@data-mapping/reducers/select.reducer';
 import {
   DefaultSlotMaskRender,
+  DefaultSlotSelectDropdown,
+  DefaultSlotStyler,
   DefaultTagNodeStyler,
-} from '@data-mapping/styler';
+} from '@data-mapping/DefaultRender';
 
 import type { IDraggingItem } from '@data-mapping/_internal/dnd';
 import type * as types from './_types';
@@ -61,11 +63,13 @@ const DataMappingComponent: React.FC<
 > = ({
   nodes,
   slots,
+  selectDropdownRenderer = DefaultSlotSelectDropdown,
   slotMaskRenderer = DefaultSlotMaskRender,
   tagNodeStyler = DefaultTagNodeStyler,
   freeSlotLabel = 'Available',
   initialMapping = undefined,
   // TODO: implement visibility
+  showHidden = false,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onVisibleChange = undefined,
 }) => {
@@ -166,11 +170,62 @@ const DataMappingComponent: React.FC<
     [mappingObject, nodesData],
   );
 
+  // const findNodesInOtherSlot = React.useCallback(
+  //   (slotId: string) => {
+  //     const nodesInOtherSlot: {
+  //       slotId: string;
+  //       label: React.ReactNode;
+  //       nodes: types.IMappingNodeData[];
+  //     }[] = [];
+  //     for (const [mappedSlotId, mappedNodeIds] of Object.entries(
+  //       mappingObject,
+  //     )) {
+  //       if (mappedSlotId !== slotId) {
+  //         nodesInOtherSlot.push({
+  //           slotId: mappedSlotId,
+  //           label: slotsData.find((slotData) => slotData.id === mappedSlotId)!
+  //             .label,
+  //           nodes: mappedNodeIds.map(
+  //             (nodeId) => nodesData.find((nodeData) => nodeData.id === nodeId)!,
+  //           ),
+  //         });
+  //       }
+  //     }
+  //     return nodesInOtherSlot;
+  //   },
+  //   [mappingObject, nodesData, slotsData],
+  // );
+
+  const findNodesInOtherSlot = React.useCallback(
+    (slotId: string) => {
+      const res: types.ISelectionOptionData[] = [];
+
+      for (const [mappedSlotId, mappedNodeIds] of Object.entries(
+        mappingObject,
+      )) {
+        if (mappedSlotId !== slotId) {
+          res.push({
+            slot: slotsData.find((v) => v.id === mappedSlotId)!,
+            nodesInSlot: mappedNodeIds.map(
+              (nodeId) => nodesData.find((v) => v.id === nodeId)!,
+            ),
+          });
+        }
+      }
+
+      return res;
+    },
+    [mappingObject, nodesData, slotsData],
+  );
+
   /**
    * If the item can be dropped to slot
    */
   const canDropToSlot = React.useCallback(
     (_item: IDraggingItem, slot: types.IMappingSlotData) => {
+      if (!slot.visible) {
+        return false;
+      }
       // TODO: add exclusion pattern feature
       const { allowMultiple } = slot;
       if (!allowMultiple) {
@@ -246,15 +301,18 @@ const DataMappingComponent: React.FC<
   const renderTag = React.useCallback(
     (options: {
       node: types.IMappingNodeData;
+      canSelect: boolean;
       canDrag: boolean;
       canClose: boolean;
       parentSlotId?: string;
     }) => {
-      const { node, parentSlotId, canDrag, canClose } = options;
-      const isSelected =
-        selectedNodes.findIndex(
-          (selectedNode) => selectedNode.id === node.id,
-        ) !== -1;
+      const { node, parentSlotId, canSelect, canDrag, canClose } = options;
+
+      const isSelected = canSelect
+        ? selectedNodes.findIndex(
+            (selectedNode) => selectedNode.id === node.id,
+          ) !== -1
+        : false;
 
       return (
         <DraggableNode
@@ -280,42 +338,45 @@ const DataMappingComponent: React.FC<
                 }
               : undefined
           }
-          onClick={() => onSelectNodeInSlot(node, parentSlotId)}
+          onClick={
+            canSelect ? () => onSelectNodeInSlot(node, parentSlotId) : undefined
+          }
         />
       );
     },
     [onRemoveNodeFromSlot, onSelectNodeInSlot, selectedNodes, tagNodeStyler],
   );
 
-  const renderSlot = React.useCallback(
-    (options: {
-      slot: types.IMappingSlotData;
-      nodesDataInSlot: types.IMappingNodeData[];
-    }) => {
-      const { slot, nodesDataInSlot } = options;
+  const renderSlot: types.ISlotSelectDropdownRenderer = React.useCallback(
+    (props) => {
+      const {
+        currentSlot: { slot, nodesInSlot },
+        otherSlots,
+      } = props;
       const { id: slotId } = slot;
       return (
-        <Col key={slotId} span={8} style={{ padding: '0px 4px 4px 4px' }}>
+        <Col key={slotId} span={8}>
           <MapSlot
+            nodesInSlotData={nodesInSlot}
             slotData={slot}
             maskRender={slotMaskRenderer}
-            selectOptions={{
-              inSlot: nodesDataInSlot,
-              inFreeSlot: freeNodes,
-              inOtherSlot: [],
-            }}
-            tagRender={(props) =>
+            slotStyler={DefaultSlotStyler}
+            tagRender={(tagProps) =>
               renderTag({
-                node: { id: props.value, label: props.label },
+                node: { id: tagProps.value, label: tagProps.label },
                 parentSlotId: slotId,
-                canClose: props.closable,
-                canDrag: true,
+                canClose: tagProps.closable,
+                canDrag: slot.visible,
+                canSelect: slot.visible,
               })
             }
-            onSelect={(nodeId: string) => onAddNodeInSlot(nodeId, slot)}
-            onDeselect={(nodeId: string) =>
-              onRemoveNodeFromSlot(nodeId, slotId)
-            }
+            dropdownMenu={selectDropdownRenderer({
+              currentSlot: { slot, nodesInSlot },
+              otherSlots,
+              freeNodes,
+              onSelect: ({ key }) => onAddNodeInSlot(key, slot),
+              onDeselect: ({ key }) => onRemoveNodeFromSlot(key, slot.id),
+            })}
             onClear={() => onClearSlot(slotId)}
             droppable={{
               canDrop: (item) => canDropToSlot(item, slot),
@@ -327,6 +388,7 @@ const DataMappingComponent: React.FC<
     },
     [
       slotMaskRenderer,
+      selectDropdownRenderer,
       freeNodes,
       renderTag,
       onAddNodeInSlot,
@@ -337,27 +399,40 @@ const DataMappingComponent: React.FC<
     ],
   );
 
-  const slotComponents = React.useMemo(() => {
-    return slotsData
-      .filter((slot) => slot.visible === true)
-      .map((slot) =>
+  const slotComponents = React.useMemo(
+    () =>
+      (showHidden
+        ? slotsData
+        : slotsData.filter((slot) => slot.visible === true)
+      ).map((slot) =>
         renderSlot({
-          slot,
-          nodesDataInSlot: findNodesInSlot(slot.id),
+          currentSlot: { slot, nodesInSlot: findNodesInSlot(slot.id) },
+          otherSlots: findNodesInOtherSlot(slot.id),
+          freeNodes,
         }),
-      );
-  }, [findNodesInSlot, renderSlot, slotsData]);
+      ),
+    [
+      findNodesInOtherSlot,
+      findNodesInSlot,
+      freeNodes,
+      renderSlot,
+      showHidden,
+      slotsData,
+    ],
+  );
 
   const freeSlot = React.useMemo(
     () => (
       <FreeSlot
         label={freeSlotLabel}
+        slotStyler={DefaultSlotStyler}
         bodyStyle={{ padding: 8, minHeight: 40 }}
         childNodes={freeNodes.map((freeNode) =>
           renderTag({
             node: freeNode,
             canDrag: true,
             canClose: false,
+            canSelect: true,
           }),
         )}
         maskRender={slotMaskRenderer}
@@ -381,14 +456,18 @@ const DataMappingComponent: React.FC<
   return (
     <>
       {dndLayer}
-      <div className='mas-data-mapping-container' ref={containerRef}>
+      <div
+        className='mas-data-mapping-container'
+        ref={containerRef}
+        style={{ userSelect: 'none' }}
+      >
         <Row>
-          <Col span={24} style={{ padding: '4px 4px 4px 4px' }}>
-            {freeSlot}
-          </Col>
+          <Col span={24}>{freeSlot}</Col>
         </Row>
         <Row style={{ height: 16 }} />
-        <Row justify='start'>{slotComponents}</Row>
+        <Row justify='start' gutter={[8, 8]}>
+          {slotComponents}
+        </Row>
       </div>
     </>
   );

@@ -23,6 +23,7 @@
 import type React from 'react';
 
 import type { IDraggingItem } from '@data-mapping/_internal/dnd';
+import type { MenuProps } from 'antd';
 
 export interface IMappingNodeProps {
   /**
@@ -77,6 +78,13 @@ export type ISlotMaskRenderer = (props: {
   isOver: boolean;
 }) => React.ReactElement;
 
+export type ISlotStyler = (props: {
+  slot: IMappingSlotData | 'free-slot';
+  isDragging: boolean;
+  canDrop: boolean;
+  isOver: boolean;
+}) => React.CSSProperties;
+
 export type ITagNodeStyler = (props: {
   node: IMappingNodeData;
   selected: boolean;
@@ -88,6 +96,20 @@ export type IDraggingItemRenderer = (props: {
 }) => React.ReactElement;
 
 export type IMappingObject = Record<string, string[]>;
+
+export interface ISelectionOptionData {
+  slot: IMappingSlotData;
+  nodesInSlot: IMappingNodeData[];
+}
+
+export type ISlotSelectDropdownRenderer = (
+  props: {
+    currentSlot: ISelectionOptionData;
+    otherSlots: ISelectionOptionData[];
+    freeNodes: IMappingNodeData[];
+  } & Pick<MenuProps, 'onSelect'> &
+    Pick<MenuProps, 'onDeselect'>,
+) => React.ReactElement;
 
 export interface IDataMappingProps {
   /**
@@ -136,7 +158,12 @@ export interface IDataMappingProps {
   slotMaskRenderer?: ISlotMaskRenderer;
 
   /**
-   * @description style tag node
+   * @description Style tag node
    */
   tagNodeStyler?: ITagNodeStyler;
+
+  /**
+   * @description Render slot select dropdown
+   */
+  selectDropdownRenderer?: ISlotSelectDropdownRenderer;
 }

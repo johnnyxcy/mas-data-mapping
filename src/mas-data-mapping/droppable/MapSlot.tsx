@@ -29,11 +29,16 @@ import { useDrop } from 'react-dnd';
 import InstanceContext from '@data-mapping/_internal/context';
 import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
 
-import { maskContainerStyle } from '@data-mapping/styler';
+import maskContainerStyle from '@data-mapping/droppable/style';
 
 import type { SelectProps } from 'rc-select';
 import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
-import type { IMappingSlotData, ISlotMaskRenderer } from '@data-mapping/_types';
+import type {
+  IMappingNodeData,
+  IMappingSlotData,
+  ISlotMaskRenderer,
+  ISlotStyler,
+} from '@data-mapping/_types';
 
 export interface IMapSlotSelectOption {
   id: string;
@@ -42,19 +47,12 @@ export interface IMapSlotSelectOption {
 
 export interface IMapSlotProps
   extends Required<Pick<SelectProps, 'tagRender'>>,
-    Required<Pick<SelectProps, 'onSelect'>>,
-    Required<Pick<SelectProps, 'onDeselect'>>,
     Required<Pick<SelectProps, 'onClear'>> {
+  nodesInSlotData: IMappingNodeData[];
   slotData: IMappingSlotData;
-  selectOptions: {
-    inSlot: IMapSlotSelectOption[];
-    inFreeSlot: IMapSlotSelectOption[];
-    inOtherSlot: IMapSlotSelectOption[];
-  };
+  dropdownMenu: React.ReactElement;
   maskRender: ISlotMaskRenderer;
-
-  style?: React.CSSProperties;
-  bodyStyle?: React.CSSProperties;
+  slotStyler: ISlotStyler;
 
   droppable?: {
     canDrop: (item: IDraggingItem) => boolean;
@@ -69,22 +67,20 @@ interface IDndCollected {
 }
 
 export const MapSlot: React.FC<IMapSlotProps> = ({
+  nodesInSlotData,
   slotData,
   /** Antd SelectProps */
   tagRender,
-  onSelect,
-  onDeselect,
   onClear,
   /** end Antd SelectProps */
-  selectOptions: { inSlot, inFreeSlot, inOtherSlot },
   maskRender,
-  style = undefined,
-  bodyStyle = undefined,
+  slotStyler,
+  dropdownMenu,
   droppable = undefined,
 }) => {
   const { instanceId } = React.useContext(InstanceContext);
 
-  const { id: slotId, label } = slotData;
+  const { id: slotId, label: slotLabel } = slotData;
 
   const [{ isDragging, isOver, canDrop }, dropRef] = useDrop<
     IDraggingItem,
@@ -98,7 +94,7 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
         if (droppable) {
           droppable.onDrop(item);
         }
-        return { slotId, label };
+        return { slotId, label: slotLabel };
       },
       collect: (monitor) => ({
         isDragging: monitor.getItem() !== null,
@@ -106,16 +102,7 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
         canDrop: monitor.canDrop(),
       }),
     }),
-    [slotId, label, droppable],
-  );
-
-  const renderOption = ({
-    id: optionId,
-    label: optionLabel,
-  }: IMapSlotSelectOption) => (
-    <Select.Option key={optionId} value={optionId}>
-      {optionLabel}
-    </Select.Option>
+    [slotId, slotLabel, droppable],
   );
 
   const mask = React.useMemo(
@@ -131,35 +118,24 @@ export const MapSlot: React.FC<IMapSlotProps> = ({
       <Card
         key={slotId}
         className='mas-data-mapping-slot-card'
-        title={label}
+        title={slotLabel}
         bordered
         size='small'
-        style={style}
-        bodyStyle={bodyStyle}
+        style={slotStyler({ slot: slotData, isDragging, canDrop, isOver })}
       >
         <Select
-          value={inSlot.map((opt) => opt.id)}
+          value={nodesInSlotData.map((opt) => opt.id)}
           mode='multiple'
           maxTagCount='responsive'
+          disabled={!slotData.visible}
           bordered={false}
           allowClear
           showArrow={false}
-          onSelect={onSelect}
-          onDeselect={onDeselect}
           onClear={onClear}
           style={{ width: '100%' }}
           tagRender={tagRender}
-        >
-          <Select.OptGroup label='已选择'>
-            {inSlot.map(renderOption)}
-          </Select.OptGroup>
-          <Select.OptGroup label='未选择'>
-            {inFreeSlot.map(renderOption)}
-          </Select.OptGroup>
-          <Select.OptGroup label='替换'>
-            {inOtherSlot.map(renderOption)}
-          </Select.OptGroup>
-        </Select>
+          dropdownRender={() => dropdownMenu}
+        />
       </Card>
     </div>
   );

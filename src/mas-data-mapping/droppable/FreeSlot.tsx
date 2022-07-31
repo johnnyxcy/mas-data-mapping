@@ -26,11 +26,11 @@ import React from 'react';
 import { Card, Space } from 'antd';
 import { useDrop } from 'react-dnd';
 
-import { maskContainerStyle } from '@data-mapping/styler';
+import maskContainerStyle from '@data-mapping/droppable/style';
 import { DragItemTypes, uniqueDragItemType } from '@data-mapping/_internal/dnd';
 import InstanceContext from '@data-mapping/_internal/context';
 
-import type { ISlotMaskRenderer } from '@data-mapping/_types';
+import type { ISlotMaskRenderer, ISlotStyler } from '@data-mapping/_types';
 import type { IDraggingItem, IDropTarget } from '@data-mapping/_internal/dnd';
 
 export interface IFreeSlotProps {
@@ -39,7 +39,7 @@ export interface IFreeSlotProps {
 
   maskRender: ISlotMaskRenderer;
 
-  style?: React.CSSProperties;
+  slotStyler: ISlotStyler;
   bodyStyle?: React.CSSProperties;
 
   droppable?: {
@@ -57,7 +57,7 @@ export const FreeSlot: React.FC<IFreeSlotProps> = ({
   label,
   childNodes,
   maskRender,
-  style = undefined,
+  slotStyler,
   bodyStyle = undefined,
   droppable = undefined,
 }) => {
@@ -101,7 +101,10 @@ export const FreeSlot: React.FC<IFreeSlotProps> = ({
         title={label}
         bordered
         size='small'
-        style={{ ...style, zIndex: 6 }}
+        style={{
+          ...slotStyler({ slot: 'free-slot', isDragging, canDrop, isOver }),
+          zIndex: 6,
+        }}
         bodyStyle={{ ...bodyStyle, zIndex: 6 }}
       >
         <Space wrap size={4}>

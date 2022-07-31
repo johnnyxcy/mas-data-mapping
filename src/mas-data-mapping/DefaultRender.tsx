@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022 Chongyi Xu
+ * Copyright (c) 2022 Chongyi XU
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -26,8 +26,14 @@ import {
   StopOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
+import { Menu } from 'antd';
 
-import type { ISlotMaskRenderer, ITagNodeStyler } from '@data-mapping/_types';
+import type {
+  ISlotMaskRenderer,
+  ISlotSelectDropdownRenderer,
+  ISlotStyler,
+  ITagNodeStyler,
+} from '@data-mapping/_types';
 
 export const DefaultSlotMaskRender: ISlotMaskRenderer = ({
   slot,
@@ -37,7 +43,6 @@ export const DefaultSlotMaskRender: ISlotMaskRenderer = ({
 }) => (
   <div
     style={{
-      // display: isDragging ? 'block' : 'none',
       display: isDragging ? 'flex' : 'none',
       alignItems: 'center',
       justifyContent: 'center',
@@ -45,14 +50,6 @@ export const DefaultSlotMaskRender: ISlotMaskRenderer = ({
       /** Fit content */
       height: '100%',
       width: '100%',
-
-      /**
-       * background-color
-       */
-      backgroundColor: canDrop
-        ? 'var(--ant-success-color-deprecated-bg)'
-        : undefined,
-      opacity: '0.6',
 
       /**
        * border
@@ -89,17 +86,55 @@ export const DefaultTagNodeStyler: ITagNodeStyler = ({ selected }) => ({
   textAlign: 'center',
 });
 
-export const maskContainerStyle: Readonly<React.CSSProperties> = {
-  /** stretch to fit parent */
-  width: '100%',
-  height: '100%',
-  position: 'absolute',
-  top: '0px',
-  left: '0px',
+export const DefaultSlotStyler: ISlotStyler = ({ slot, canDrop }) => ({
+  /**
+   * background-color
+   */
+  backgroundColor: canDrop
+    ? 'var(--ant-success-color-deprecated-bg)'
+    : undefined,
 
-  /** zIndex to perform like a mask */
-  zIndex: 8,
+  opacity: slot !== 'free-slot' && !slot.visible ? 0.4 : undefined,
+});
 
-  /** click through */
-  pointerEvents: 'none',
-};
+export const DefaultSlotSelectDropdown: ISlotSelectDropdownRenderer = ({
+  currentSlot,
+  otherSlots,
+  freeNodes,
+  onSelect = undefined,
+  onDeselect = undefined,
+}) => (
+  <Menu
+    defaultOpenKeys={['selected', 'not-selected']}
+    mode='inline'
+    selectedKeys={currentSlot.nodesInSlot.map((nodeData) => nodeData.id)}
+    selectable
+    style={{ userSelect: 'none' }}
+    onSelect={onSelect}
+    onDeselect={onDeselect}
+  >
+    <Menu.SubMenu title='SELECTED' key='selected'>
+      {currentSlot.nodesInSlot.map((nodeData) => (
+        <Menu.Item key={nodeData.id}>{nodeData.label}</Menu.Item>
+      ))}
+    </Menu.SubMenu>
+    <Menu.SubMenu title='NOT-SELECTED' key='not-selected'>
+      {freeNodes.map((nodeData) => (
+        <Menu.Item key={nodeData.id}>{nodeData.label}</Menu.Item>
+      ))}
+    </Menu.SubMenu>
+    <Menu.SubMenu title='REPLACE' key='replace'>
+      {otherSlots
+        .filter((info) => info.nodesInSlot.length > 0)
+        .map((info) => (
+          <Menu.ItemGroup title={info.slot.label} key={info.slot.id}>
+            {info.nodesInSlot.map((nodeData) => (
+              <Menu.Item key={nodeData.id} disabled={!info.slot.visible}>
+                {nodeData.label}
+              </Menu.Item>
+            ))}
+          </Menu.ItemGroup>
+        ))}
+    </Menu.SubMenu>
+  </Menu>
+);
