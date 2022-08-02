@@ -1,15 +1,6 @@
 import { defineConfig } from 'dumi';
 import path from 'path';
 
-const ghPagesPlugin =
-  process.env.NODE_ENV === 'production'
-    ? {
-        ghPages: {
-          useCDN: true,
-        },
-      }
-    : {};
-
 export default defineConfig({
   title: 'MaSDataMapping',
   favicon:
@@ -24,5 +15,4 @@ export default defineConfig({
   alias: {
     '@data-mapping': path.resolve(__dirname, 'src/mas-data-mapping'),
   },
-  ...ghPagesPlugin,
 });
