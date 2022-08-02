@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "mas-data-mapping",
   "description": "React Component for mapping tag to slot",
   "version": "1.0.0",
@@ -73,6 +72,7 @@
     "eslint-plugin-react-redux": "^4.0.0",
     "eslint-plugin-unicorn": "^43.0.2",
     "father": "^4.0.0-rc.6",
+    "gh-pages": "^4.0.0",
     "lint-staged": "^10.0.7",
     "prettier": "^2.2.1",
     "umi-plugin-gh-pages": "^1.0.1",
