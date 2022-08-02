@@ -22,7 +22,17 @@
  */
 
 export { DataMapping as default } from '@data-mapping/DataMapping';
-export type {
+export {
   IMappingNodeProps,
+  IMappingNodeData,
+  IMappingSlotData,
   IMappingSlotProps,
-} from '@data-mapping/DataMapping';
+  IMappingObject,
+  ISlotMaskRenderer,
+  ISlotStyler,
+  ITagNodeStyler,
+  IDraggingItemRenderer,
+  ISelectionOptionData,
+  ISlotSelectDropdownRenderer,
+  IDataMappingProps,
+} from '@data-mapping/_types';
