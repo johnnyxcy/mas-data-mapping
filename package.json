@@ -1,7 +1,7 @@
 {
   "name": "mas-data-mapping",
   "description": "React Component for mapping tag to slot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "scripts": {
     "start": "dumi dev",
