@@ -135,6 +135,7 @@ export const {
      * Remove node from any slot
      * @param state current state
      * @param action nodeId
+     * @deprecated after version 2.0.0
      */
     removeFromAnySlot: (
       state: WritableDraft<IMasDataMappingMap>,
